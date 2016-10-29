@@ -17,6 +17,8 @@ public class Trabalho_ii {
         executorService.submit(UDPserver);
         executorService.submit(cliente);
         
+        Gestor_Producao.getInstance();                                          // vou ter de utilizar para inicializar o objecto do Gestor de Producao
+        
         
     }
     
