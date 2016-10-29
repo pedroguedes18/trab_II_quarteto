@@ -8,11 +8,6 @@ import java.util.logging.Logger;
 
 public class Servidor_UDP implements Runnable{
     
-    public void arranca_servidor() throws Exception
-      {
-
-      }
-
     @Override
     public void run() {
                     int porta = 54321;                                           // porta que o servidor vai ficar a escutar 
