@@ -48,9 +48,8 @@ public class Gestor_Producao {
     //---------------------------------------------------------
     
     
-    public int verifica_conteudo(String conteudo)
+    public String verifica_conteudo(String conteudo)                            // retorna exatamente o que interessa do pedido, ou seja se tiver espaços a mais no inicio elimina-os
     {
-        int resultado;
         String n_ordem;
         String peca_origem;
         String peca_final;
@@ -71,8 +70,6 @@ public class Gestor_Producao {
                 peca_final = part2.substring(5, 6);
                 quantidade = part2.substring(6, 8);
                 
-                resultado = 1;
-                
                 System.out.println("----------------------------------");
                 System.out.println("Ordem de Transformação:");
                 System.out.println("numero ordem: " + n_ordem);
@@ -89,8 +86,6 @@ public class Gestor_Producao {
                 peca_final = part2.substring(5, 6);
                 quantidade = part2.substring(6, 8);
                 
-                resultado = 2;
-                
                 System.out.println("----------------------------------");
                 System.out.println("Ordem de Montagem:");
                 System.out.println("numero ordem: " + n_ordem);
@@ -106,9 +101,7 @@ public class Gestor_Producao {
                 peca_origem = part2.substring(4, 5);
                 peca_final = part2.substring(5, 6);
                 quantidade = part2.substring(6, 8);
-                
-                resultado = 3;
-                
+                               
                 System.out.println("----------------------------------");
                 System.out.println("Ordem de Descarga:");
                 System.out.println("numero ordem: " + n_ordem);
@@ -119,27 +112,26 @@ public class Gestor_Producao {
                 break;
             
             default:
-                resultado = -1;
                 System.out.println("A string está no formato errado");
                 break;
         }
         
-        return resultado;
+        return part2;
     }
     
     public void insere_vetor_pedidos_pedentes(String pedido)
     {
         // vou ter de analizar o que tem na string pedido mas para já só guarda no vetor, e na posicao que está vazia.
         
-        int x = verifica_conteudo(pedido);
+        String ordem = verifica_conteudo(pedido);
         
         int pos = this.ver_se_vetor_cheio(vetor_pedidos_pendentes);             // se tem espaço é aqui guardado a posicao disponivel;
         
         if( pos > -1)
         {
-            this.vetor_pedidos_pendentes[pos] = pedido;
+            this.vetor_pedidos_pendentes[pos] = ordem;
             
-            System.out.println("O texto adicionado na posicao " + pos + "foi: " + this.vetor_pedidos_pendentes[pos]);
+            System.out.println("O texto adicionado na posicao " + pos + " foi: " + this.vetor_pedidos_pendentes[pos]);
         }
         
         else
