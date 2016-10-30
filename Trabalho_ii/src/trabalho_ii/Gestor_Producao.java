@@ -54,6 +54,8 @@ public class Gestor_Producao {
         if( pos > -1)
         {
             this.vetor_pedidos_pendentes[pos] = pedido;
+            
+            System.out.println("O texto adicionado na posicao " + pos + "foi: " + this.vetor_pedidos_pendentes[pos]);
         }
         
         else

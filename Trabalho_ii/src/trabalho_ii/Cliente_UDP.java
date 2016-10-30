@@ -21,9 +21,7 @@ public class Cliente_UDP implements Runnable {
             byte[] receiveData = new byte[1024];                                                // cria o buffer para receber mensagem
             
             String msg = msgConsola.readLine();
-            
-            System.out.println(""+ msg);
-            
+          
             msgEnviar = msg.getBytes();
             
             DatagramPacket sendPacket = new DatagramPacket(msgEnviar, msgEnviar.length, IPAddress, 54321);  // prepara o pacote com a mensagem que queremos mandar para o ip e porta que especificamos

@@ -35,6 +35,13 @@ public class Servidor_UDP implements Runnable{
                   String mensagem = new String( msgRecebidaPacket.getData());
                   System.out.println("RECEIVED: " + mensagem);
                   
+                  //-----------------------------------------------------------------------
+                  
+                  Gestor_Producao gestor_producao = Gestor_Producao.getInstance();          // vai buscar a instancia do Gestor de Producao
+                  gestor_producao.insere_vetor_pedidos_pedentes(mensagem);                  // envia a mensagem que recebeu para o G_P
+                  
+                  //-----------------------------------------------------------------------
+                  
                   InetAddress IPAddress = msgRecebidaPacket.getAddress();           // vê o endereço IP de quem lhe mandou a mensagem para lhe poder responder   
                   
                   int port = msgRecebidaPacket.getPort();                           // guarda a porta do cliente
