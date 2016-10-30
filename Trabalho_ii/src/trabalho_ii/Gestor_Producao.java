@@ -25,7 +25,7 @@ public class Gestor_Producao {
     
     
     //----------------------------------------------------------------------------------------------------------------------
-    // tentar que o gestor de produção receba o que lhe é enviado pelo Servidor UDP e o guarde no vetor de pedidos_pendentes
+    // O gestor de produção recebe o que lhe é enviado pelo Servidor UDP e o guarde no vetor de pedidos_pendentes
     //----------------------------------------------------------------------------------------------------------------------
     
     private int ver_se_vetor_cheio (String [] vetor)
@@ -44,6 +44,23 @@ public class Gestor_Producao {
         return pos;                                                             // se não encontrar nenhuma posicao vazia restorna -1;
     }
     
+    // Tenho de analisar se o conteudo da mensagem é o correcto
+    //---------------------------------------------------------
+    
+    
+    public int verifica_conteudo(String conteudo)
+    {
+        int resultado = 0;
+        String[] mensagem = conteudo.split(":", 1);
+        
+        if (mensagem.length != 8)
+        {
+            resultado = -1;
+            System.out.println("A string está no formato errado");
+        }
+        
+        return resultado;
+    }
     
     public void insere_vetor_pedidos_pedentes(String pedido)
     {
@@ -62,7 +79,6 @@ public class Gestor_Producao {
         {
             System.out.println("O vetor está cheio. Não é possivel adicionar mais pedidos");
         }
-
     }
- 
+    
 }
