@@ -50,13 +50,78 @@ public class Gestor_Producao {
     
     public int verifica_conteudo(String conteudo)
     {
-        int resultado = 0;
-        String[] mensagem = conteudo.split(":", 1);
+        int resultado;
+        String n_ordem;
+        String peca_origem;
+        String peca_final;
+        String quantidade;
+        String[] mensagem = conteudo.split("(?<=:)");                           // garanto que o inicio começa com este sinal ":"
+       
+        String part2 = mensagem[1];                                             // Ficamos com o que está a direita de ":"
         
-        if (mensagem.length != 8)
+        part2 = part2.substring(0, 8);                                          // fico com o tamanho certo que quero
+        
+        switch (part2.substring(0, 1)) 
         {
-            resultado = -1;
-            System.out.println("A string está no formato errado");
+        
+            case "T":                                                           // se for uma transformação
+                
+                n_ordem  = part2.substring(1, 4);
+                peca_origem = part2.substring(4, 5);
+                peca_final = part2.substring(5, 6);
+                quantidade = part2.substring(6, 8);
+                
+                resultado = 1;
+                
+                System.out.println("----------------------------------");
+                System.out.println("Ordem de Transformação:");
+                System.out.println("numero ordem: " + n_ordem);
+                System.out.println("peça origem: P" + peca_origem);
+                System.out.println("peça final:  P" + peca_final);
+                System.out.println("quantidade:  " + quantidade);
+                System.out.println("----------------------------------");
+                break;
+        
+            case "M":                                                           // se for uma montagem
+                
+                n_ordem  = part2.substring(1, 4);
+                peca_origem = part2.substring(4, 5);
+                peca_final = part2.substring(5, 6);
+                quantidade = part2.substring(6, 8);
+                
+                resultado = 2;
+                
+                System.out.println("----------------------------------");
+                System.out.println("Ordem de Montagem:");
+                System.out.println("numero ordem: " + n_ordem);
+                System.out.println("peça baixo: P" + peca_origem);
+                System.out.println("peça cima:  P" + peca_final);
+                System.out.println("quantidade:  " + quantidade);
+                System.out.println("----------------------------------");
+                break;
+        
+            case "U":                                                           // se for uma descarga
+                
+                n_ordem  = part2.substring(1, 4);
+                peca_origem = part2.substring(4, 5);
+                peca_final = part2.substring(5, 6);
+                quantidade = part2.substring(6, 8);
+                
+                resultado = 3;
+                
+                System.out.println("----------------------------------");
+                System.out.println("Ordem de Descarga:");
+                System.out.println("numero ordem: " + n_ordem);
+                System.out.println("peça : P" + peca_origem);
+                System.out.println("Destino:  Pusher " + peca_final);
+                System.out.println("quantidade:  " + quantidade);
+                System.out.println("----------------------------------");
+                break;
+            
+            default:
+                resultado = -1;
+                System.out.println("A string está no formato errado");
+                break;
         }
         
         return resultado;
@@ -65,6 +130,8 @@ public class Gestor_Producao {
     public void insere_vetor_pedidos_pedentes(String pedido)
     {
         // vou ter de analizar o que tem na string pedido mas para já só guarda no vetor, e na posicao que está vazia.
+        
+        int x = verifica_conteudo(pedido);
         
         int pos = this.ver_se_vetor_cheio(vetor_pedidos_pendentes);             // se tem espaço é aqui guardado a posicao disponivel;
         

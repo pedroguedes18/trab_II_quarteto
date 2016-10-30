@@ -16,7 +16,7 @@ public class Servidor_UDP implements Runnable{
         try {
             serverSocket = new DatagramSocket(porta);                    // fica a escutar da porta 54321
  
-            byte[] msgRecebida = new byte[1024];                         // prepara buffer para recebimento de mensagens dos clientes
+            byte[] msgRecebida = new byte[256];                         // prepara buffer para recebimento de mensagens dos clientes
             byte[] msgEnviada = new byte[1024];                          // prepara buffer para enviar mensagens para os clientes
             
             System.out.println("A ouvir a porta: " + porta);
