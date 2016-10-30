@@ -1,11 +1,18 @@
 
 package trabalho_ii;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Gestor_Producao {
     
-    private final String [] vetor_pedidos_pendentes = new String [15];           // cria um vetor de pedidos pendentes
-    private final String [] vetor_pedidos_execucao = new String [7];             // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
-   
+    private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
+    private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
+    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    private final String [] horaData_init_pedidos_execucao = new String[7];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
+    private final String [] horaData_final_pedidos_execucao = new String[7];    // " " " "
+    private int caminho;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
     
@@ -28,20 +35,7 @@ public class Gestor_Producao {
     // O gestor de produção recebe o que lhe é enviado pelo Servidor UDP e o guarde no vetor de pedidos_pendentes
     //----------------------------------------------------------------------------------------------------------------------
     
-    public void transformacao(String n_ordem, String peca_origem, String peca_final, String quantidade)
-    {
-        
-    }
-    
-    public void montagem(String n_ordem, String peca_baixo, String peca_cima, String quantidade)
-    {
-        
-    }
-    
-    public void descarga(String n_ordem, String peca, String pusher, String quantidade)
-    {
-        
-    }
+
     
     private int ver_se_vetor_cheio (String [] vetor)
     {
@@ -81,7 +75,7 @@ public class Gestor_Producao {
         
         String ordem = verifica_conteudo(pedido);
         
-        int pos = this.ver_se_vetor_cheio(vetor_pedidos_pendentes);             // se tem espaço é aqui guardado a posicao disponivel;
+        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_pendentes);             // se tem espaço é aqui guardado a posicao disponivel;
         
         if( pos > -1)
         {
@@ -96,6 +90,67 @@ public class Gestor_Producao {
         }
     }
     
+    public int insere_vetor_pedidos_execucao(String pedido)
+    {
+        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);             // se tem espaço é aqui guardado a posicao disponivel;
+        
+        if( pos > -1)
+        {
+            this.vetor_pedidos_execucao[pos] = pedido;
+            
+            System.out.println("Vetor de pedidos em execução: " + this.vetor_pedidos_execucao[pos]);
+            
+            return pos;
+        }
+        
+        else
+        {
+            System.out.println("O vetor está cheio. Não é possivel executar mais pedidos");
+            return pos;
+        }
+    }
+    
+    
+    
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    public void transformacao(String n_ordem, String peca_origem, String peca_final, String quantidade, String pedido)
+    {
+        int pos;
+        Date date = new Date();
+        
+        String hourDate = dateFormat.format(date);                              // devolve a hora e a data que o pedido comecou a sua execucao
+        
+        pos = insere_vetor_pedidos_execucao(pedido);                            // insere no vetor de pedidos de execucao;
+        
+        this.horaData_init_pedidos_execucao[pos] = hourDate;                    // associa na mesma posicao a hora de inicio
+        
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
+        // temos de ir ver a disponibilidade da célula primeiro --------------------------------------------------------------------------------------------
+        // assumindo que o caminho disponivel é caminho = 1;    --------------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
+        
+        caminho = 1;                                                            // caminho a passar para o PLC
+        
+        
+        
+        
+    }
+    
+    public void montagem(String n_ordem, String peca_baixo, String peca_cima, String quantidade)
+    {
+        
+    }
+    
+    public void descarga(String n_ordem, String peca, String pusher, String quantidade)
+    {
+        
+    }
+    
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------
+    
     public void executa_pedido_pendente()
     {
         String n_ordem;
@@ -105,7 +160,7 @@ public class Gestor_Producao {
         
         String ordem = this.vetor_pedidos_pendentes[0];
         
-        switch (ordem.substring(0, 1)) 
+        switch (ordem.substring(0, 1))                                          // priemiro vê que tipo de instrução e separa os parametros
         {
             case "T":                                                           // se for uma transformação
                 
@@ -114,9 +169,9 @@ public class Gestor_Producao {
                 peca_final = ordem.substring(5, 6);
                 quantidade = ordem.substring(6, 8);
                 
-                transformacao(n_ordem, peca_origem, peca_final, quantidade);    // chama a funcao que vai tratar de enviar informacao de transformação
+                transformacao(n_ordem, peca_origem, peca_final, quantidade, ordem);    // chama a funcao que vai tratar de enviar informacao de transformação
                 
-                System.out.println("----------------------------------");
+                System.out.println("----------------------------------");       // estes prints foram para testar
                 System.out.println("Ordem de Transformação:");
                 System.out.println("numero ordem: " + n_ordem);
                 System.out.println("peça origem: P" + peca_origem);
