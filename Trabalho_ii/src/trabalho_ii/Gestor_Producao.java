@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+
 public class Gestor_Producao {
     
     private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
@@ -93,10 +94,15 @@ public class Gestor_Producao {
         // assumindo que o caminho disponivel é caminho = 1;    --------------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         
-        caminho = 13;                                                           // caminho a passar para o PLC, que é devolvido pela classe escolhe caminho.
+        caminho = 10;                                                           // caminho a passar para o PLC, que é devolvido pela classe escolhe caminho.
         
         ModBus.writePLC(0, caminho);                                            // passa o caminho para o PLC
         ModBus.writePLC(1, peca_orig);                                          // passa a peca inicial para o PLC
+        try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
+                Thread.sleep(100);
+        } catch(InterruptedException ex) {
+        Thread.currentThread().interrupt();
+        }
         ModBus.writePLC(1, 0);                                                  // para só meter uma peca de cada vez
         
         
