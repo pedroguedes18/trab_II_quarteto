@@ -12,12 +12,13 @@ public class Trabalho_ii {
         Servidor_UDP UDPserver = new Servidor_UDP();
         Cliente_UDP cliente = new Cliente_UDP();
         
-        Gestor_Producao.getInstance();                                          // vou ter de utilizar para inicializar o objecto do Gestor de Producao
+        Gestor_Producao  gestor_producao = Gestor_Producao.getInstance();                                          // vou ter de utilizar para inicializar o objecto do Gestor de Producao
         
         ExecutorService executorService = Executors.newFixedThreadPool(2);       // criar duas threads para o servidor e cliente.
         executorService.submit(UDPserver);
         executorService.submit(cliente);
       
+        
     }
     
 }

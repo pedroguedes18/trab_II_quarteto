@@ -69,46 +69,7 @@ public class Gestor_Producao {
     }
     
 
-    public void insere_vetor_pedidos_pedentes(String pedido)
-    {
-        // vou ter de analizar o que tem na string pedido mas para já só guarda no vetor, e na posicao que está vazia.
-        
-        String ordem = verifica_conteudo(pedido);
-        
-        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_pendentes);             // se tem espaço é aqui guardado a posicao disponivel;
-        
-        if( pos > -1)
-        {
-            this.vetor_pedidos_pendentes[pos] = ordem;
-            
-            System.out.println("O texto adicionado na posicao " + pos + " foi: " + this.vetor_pedidos_pendentes[pos]);
-        }
-        
-        else
-        {
-            System.out.println("O vetor está cheio. Não é possivel adicionar mais pedidos");
-        }
-    }
-    
-    public int insere_vetor_pedidos_execucao(String pedido)
-    {
-        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);             // se tem espaço é aqui guardado a posicao disponivel;
-        
-        if( pos > -1)
-        {
-            this.vetor_pedidos_execucao[pos] = pedido;
-            
-            System.out.println("Vetor de pedidos em execução: " + this.vetor_pedidos_execucao[pos]);
-            
-            return pos;
-        }
-        
-        else
-        {
-            System.out.println("O vetor está cheio. Não é possivel executar mais pedidos");
-            return pos;
-        }
-    }
+
     
     
     
@@ -118,6 +79,7 @@ public class Gestor_Producao {
     public void transformacao(String n_ordem, String peca_origem, String peca_final, String quantidade, String pedido)
     {
         int pos;
+        int peca_orig = Integer.parseInt(peca_origem);
         Date date = new Date();
         
         String hourDate = dateFormat.format(date);                              // devolve a hora e a data que o pedido comecou a sua execucao
@@ -131,7 +93,11 @@ public class Gestor_Producao {
         // assumindo que o caminho disponivel é caminho = 1;    --------------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         
-        caminho = 1;                                                            // caminho a passar para o PLC
+        caminho = 13;                                                           // caminho a passar para o PLC, que é devolvido pela classe escolhe caminho.
+        
+        ModBus.writePLC(0, caminho);                                            // passa o caminho para o PLC
+        ModBus.writePLC(1, peca_orig);                                          // passa a peca inicial para o PLC
+        ModBus.writePLC(1, 0);                                                  // para só meter uma peca de cada vez
         
         
         
@@ -221,4 +187,49 @@ public class Gestor_Producao {
                 break;
         }
     }
+
+    public void insere_vetor_pedidos_pedentes(String pedido)
+    {
+        // vou ter de analizar o que tem na string pedido mas para já só guarda no vetor, e na posicao que está vazia.
+        
+        String ordem = verifica_conteudo(pedido);
+        
+        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_pendentes);             // se tem espaço é aqui guardado a posicao disponivel;
+        
+        if( pos > -1)
+        {
+            this.vetor_pedidos_pendentes[pos] = ordem;
+            
+            System.out.println("O texto adicionado na posicao " + pos + " foi: " + this.vetor_pedidos_pendentes[pos]);
+            
+           executa_pedido_pendente();
+        }
+        
+        else
+        {
+            System.out.println("O vetor está cheio. Não é possivel adicionar mais pedidos");
+        }
+    }
+    
+    public int insere_vetor_pedidos_execucao(String pedido)
+    {
+        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);             // se tem espaço é aqui guardado a posicao disponivel;
+        
+        if( pos > -1)
+        {
+            this.vetor_pedidos_execucao[pos] = pedido;
+            
+            System.out.println("Vetor de pedidos em execução: " + this.vetor_pedidos_execucao[pos]);
+            
+            return pos;
+        }
+        
+        else
+        {
+            System.out.println("O vetor está cheio. Não é possivel executar mais pedidos");
+            return pos;
+        }
+    }
+
+
 }
