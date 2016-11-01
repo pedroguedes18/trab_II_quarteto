@@ -1,3 +1,3 @@
 # trab_II_quarteto
 
-// para teste o como fazer as coisas
+// pra teste o como fazer as coisas
