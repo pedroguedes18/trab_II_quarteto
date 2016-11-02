@@ -22,24 +22,96 @@ public class Escolha_Caminho {
     
     //Para o caso de uma Transformação
     
-    public int Caminho_Associado (int peça_origem, int peça_final){
-        int i=0;
+    public int Caminho_Associado_Transformaçao (int peça_origem, int peça_final){
+        int caminho=0;
         
         if (peça_origem == 2){
             switch (peça_final){
-                case 1: //Caminho 
+                //MAQUINA A-B
+                case 1: 
+                        //Verifica disponibilidade da célula da direita e, em
+                        //caso negativo verifica célula da esquerda
+                        //Só atualiza valor do caminho se houver disponibilidade
+                        //Caminho 
                     break;
-                case 3: //Caminho
+                case 3: //Caminho  - (Tem caminho alternativo em B-C)
                     break;
-                case 4: //Caminho
+                case 4: //Caminho  - (Tem caminho alternativo em B-C)
+                    break;
+                case 5: //Caminho  - (Tem caminho alternativo em B-C)
+                    break;
+                case 7: //Caminho
+                    break;    
+                //MAQUINA B-C    
+                case 6: //Caminho
+            }      
+        }
+         
+        else if (peça_origem == 1){
+            switch (peça_final){
+                //MAQUINA A-B
+                case 3: //Caminho  - (Tem caminho alternativo em B-C)
+                    break;
+                case 4: //Caminho  - (Tem caminho alternativo em B-C)
                     break;
                 case 5: //Caminho
                     break;
-                case 7: //Caminho
-                    break;       
+                case 7: //Caminho  - (Tem caminho alternativo em B-C)
+                    break; 
+                //MAQUINA B-C  
+                case 2: //Caminho
+                    break;
+                case 6: //Caminho    
+                    break;
             }      
         }
         
-        return i;
+        else if (peça_origem == 4){
+            switch (peça_final){
+                //MAQUINA A-B
+                case 5: //Caminho 
+                    break;
+                case 7: //Caminho  - (Tem caminho alternativo em B-C)
+                    break;  
+                //MAQUINA C
+                case 6: //Caminho    
+            }      
+        }
+        
+        else if ((peça_origem == 5) & (peça_final == 7)){
+           //MAQUINA B
+           //Caminho
+        }
+        
+        else if ((peça_origem == 6) & (peça_final == 6)){
+            //MAQUINA C
+            //Caminho
+        }
+    
+        
+        return caminho;
+        //Se o caminho retornado for 0 significa que não há disponibilidade 
+        //para o pedido atual
+    }
+    
+    public int Caminho_Associado_Montagem (){
+        int caminho = 0;
+        //Ver disponibilidade e em caso afirmativo retorna Caminho
+        return caminho;
+    }
+    
+    public int Caminho_Associado_Descarga (int destino){
+        int caminho = 0;
+        
+        if(destino == 1){
+            //Ver disponibilidade da célula
+            //caminho
+        }
+        else if(destino == 1){
+            //Ver disponibilidade da célula
+            //caminho
+        }
+        
+        return caminho;
     }
 }
