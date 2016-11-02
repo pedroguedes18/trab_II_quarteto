@@ -123,7 +123,7 @@ public class Gestor_Producao {
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     
-    public void executa_pedido_pendente()
+    public void executa_pedido_pendente()                                       // executa o pedido que está na primeira posicao do vetor de pedidos pendentes
     {
         String n_ordem;
         String peca_origem;
