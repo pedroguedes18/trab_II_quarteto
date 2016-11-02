@@ -23,6 +23,8 @@ public class Escolha_Caminho {
     //Para o caso de uma Transformação
     
     public int Caminho_Associado (int peça_origem, int peça_final){
+        int i=0;
+        
         if (peça_origem == 2){
             switch (peça_final){
                 case 1: //Caminho 
@@ -37,5 +39,7 @@ public class Escolha_Caminho {
                     break;       
             }      
         }
+        
+        return i;
     }
 }

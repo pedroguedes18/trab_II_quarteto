@@ -11,8 +11,9 @@ public class Cliente_UDP implements Runnable {
 
 
     @Override
-    public void run() {
-                BufferedReader msgConsola = new BufferedReader(new InputStreamReader(System.in));   // mensagem que é escrita na consola
+    public void run() 
+    {
+        BufferedReader msgConsola = new BufferedReader(new InputStreamReader(System.in));   // mensagem que é escrita na consola     
         try (DatagramSocket clientSocket = new DatagramSocket()                                     // cria um datagrama para o cliente, ou seja cria um socket para o cliente
         ) {
             InetAddress IPAddress = InetAddress.getByName("localhost");                             // vai buscar o ip do localhost
@@ -41,6 +42,6 @@ public class Cliente_UDP implements Runnable {
             Logger.getLogger(Cliente_UDP.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Cliente_UDP.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        }    
     }
 }

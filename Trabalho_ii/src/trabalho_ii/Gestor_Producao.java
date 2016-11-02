@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-public class Gestor_Producao {
+public class Gestor_Producao implements Runnable {
     
     private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
     private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
@@ -38,7 +38,7 @@ public class Gestor_Producao {
     
 
     
-    private int ver_se_vetor_cheio (String [] vetor)
+    private int ver_se_vetor_cheio (String [] vetor)                            // retorna a posicao para inserir se tiver espaço, se nao retorna -1
     {
         int pos = -1;
         
@@ -122,7 +122,7 @@ public class Gestor_Producao {
     
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------
-    
+   
     public void executa_pedido_pendente()                                       // executa o pedido que está na primeira posicao do vetor de pedidos pendentes
     {
         String n_ordem;
@@ -234,6 +234,37 @@ public class Gestor_Producao {
         {
             System.out.println("O vetor está cheio. Não é possivel executar mais pedidos");
             return pos;
+        }
+    }
+
+    @Override
+    public void run()                                                           // função que vai andar sempre a percorrer o vetor de pedidos pendentes e a mandar executar
+    {
+        while(true)
+        {
+            if(this.vetor_pedidos_pendentes[0] == (null))                       // o vetor está vazio logo nao precisa de executar nada
+            {
+                break;
+            }
+        
+            else                                                                // quer dizer que já tem pelo menos um pedido pendente
+            {
+                for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)      // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
+                {
+                    if(this.ver_se_vetor_cheio(this.vetor_pedidos_execucao) == -1)   // verifica se pode adicionar pedidos de execução, ou seja, se já nao está tudo completo, vai ajudar para gerir as threads
+                    {
+                        break;                                                  // vetor está cheio ou seja nao posso adicionar mais pedidos em execução
+                    }
+                    
+                    else
+                    {
+                        int x = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);   // retorna a ultima posicao livre, ou seja, vai ser a thread que vou iniciar
+                        
+                        
+                    }
+                
+                }
+        }
         }
     }
 
