@@ -9,6 +9,7 @@ import java.util.Date;
 public class Gestor_Producao implements Runnable {
     
     private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
+    private final int [] vetor_aux_ped_pendentes = new int [15];                // vetor auxiliar de pedidos pendes que indicam se o processo já entrou em execução alguma vez
     private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private final String [] horaData_init_pedidos_execucao = new String[7];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
@@ -205,10 +206,9 @@ public class Gestor_Producao implements Runnable {
         if( pos > -1)
         {
             this.vetor_pedidos_pendentes[pos] = ordem;
+            this.vetor_aux_ped_pendentes[pos] = 0;                              // 0 -> significa que ainda não foi executado nenhuma vez... 
             
             System.out.println("O texto adicionado na posicao " + pos + " foi: " + this.vetor_pedidos_pendentes[pos]);
-            
-           executa_pedido_pendente();
         }
         
         else
