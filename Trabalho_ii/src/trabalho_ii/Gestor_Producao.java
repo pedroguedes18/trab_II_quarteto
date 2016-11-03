@@ -301,8 +301,11 @@ public class Gestor_Producao implements Runnable {
         
                                                 /*int pos =*/ insere_vetor_pedidos_execucao(this.vetor_pedidos_pendentes[i]);   // insere no vetor de pedidos de execucao;
         
-                                                this.horaData_init_pedidos_pendentes[i] = hourDate;                             // associa na mesma posicao a hora de inicio
+                                                this.horaData_init_pedidos_pendentes[i] = hourDate;                             // associa na mesma posicao a hora de inicio de o pedido pendente
                                                 
+                                                
+                                                // tenho de retirar 1 à quantidade
+                                                // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
                                                 // executar a funcao de tranformação
                                                 
                                                 ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
@@ -318,10 +321,20 @@ public class Gestor_Producao implements Runnable {
                                                 // significa que a peça já foi trans formada e está a ser encaminhada para
                                                 // o armazem.
                                                 
+                                                /*
+                                                while (peça nao sair da célula)
+                                                {
+                                                    fica à espera;
+                                                }
+                                                
+                                                depois remove do pedido em execução
+                                                */
                                             }
                                             
                                             else if(this.vetor_aux_ped_pendentes[i] == 1)                                       // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                             {
+                                                // tenho de retirar 1 à quantidade
+                                                // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
                                                 // executar a funcao de tranformação
                                                 
                                                 ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
@@ -337,6 +350,14 @@ public class Gestor_Producao implements Runnable {
                                                 // significa que a peça já foi trans formada e está a ser encaminhada para
                                                 // o armazem.
                                                 
+                                                /*
+                                                while (peça nao sair da célula)
+                                                {
+                                                    fica à espera;
+                                                }
+                                                
+                                                depois remove do pedido em execução
+                                                */
                                             }
                                             
                                             
@@ -382,7 +403,7 @@ public class Gestor_Producao implements Runnable {
                 
                                         if(caminho == -1)
                                         {
-                                            break;                              // ambas as células estão indisponiveis
+                                            break;                              // ambas as células estão indisponiveis (nap existe caminhos disponiveis)
                                         }
                                         
                                         else
