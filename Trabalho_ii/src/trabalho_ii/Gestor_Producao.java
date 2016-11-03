@@ -9,10 +9,11 @@ import java.util.Date;
 public class Gestor_Producao implements Runnable {
     
     private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
+    private final int [] vetor_aux_ped_pendentes = new int [15];                // vetor auxiliar de pedidos pendes que indicam se o processo já entrou em execução alguma vez
     private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    private final String [] horaData_init_pedidos_execucao = new String[7];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
-    private final String [] horaData_final_pedidos_execucao = new String[7];    // " " " "
+    private final String [] horaData_init_pedidos_pendentes = new String[15];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
+    private final String [] horaData_final_pedidos_pendentes = new String[15];    // " " " "
     private int caminho;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
@@ -77,7 +78,7 @@ public class Gestor_Producao implements Runnable {
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     
-    public void transformacao(String n_ordem, String peca_origem, String peca_final, String quantidade, String pedido)
+    public void transformacao(String n_ordem, String peca_origem, String peca_final, String quantidade, String pedido,int caminho)
     {
         int pos;
         int peca_orig = Integer.parseInt(peca_origem);
@@ -87,7 +88,7 @@ public class Gestor_Producao implements Runnable {
         
         pos = insere_vetor_pedidos_execucao(pedido);                            // insere no vetor de pedidos de execucao;
         
-        this.horaData_init_pedidos_execucao[pos] = hourDate;                    // associa na mesma posicao a hora de inicio
+        this.horaData_init_pedidos_pendentes[pos] = hourDate;                    // associa na mesma posicao a hora de inicio
         
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // temos de ir ver a disponibilidade da célula primeiro --------------------------------------------------------------------------------------------
@@ -123,14 +124,14 @@ public class Gestor_Producao implements Runnable {
     //------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------
    
-    public void executa_pedido_pendente()                                       // executa o pedido que está na primeira posicao do vetor de pedidos pendentes
+    /*public void executa_pedido_pendente(String ordem_pendente, int caminho)                                       // executa o pedido que está na primeira posicao do vetor de pedidos pendentes
     {
         String n_ordem;
         String peca_origem;
         String peca_final;
         String quantidade;
         
-        String ordem = this.vetor_pedidos_pendentes[0];
+        String ordem = ordem_pendente;
         
         switch (ordem.substring(0, 1))                                          // priemiro vê que tipo de instrução e separa os parametros
         {
@@ -141,7 +142,7 @@ public class Gestor_Producao implements Runnable {
                 peca_final = ordem.substring(5, 6);
                 quantidade = ordem.substring(6, 8);
                 
-                transformacao(n_ordem, peca_origem, peca_final, quantidade, ordem);    // chama a funcao que vai tratar de enviar informacao de transformação
+                transformacao(n_ordem, peca_origem, peca_final, quantidade, ordem, caminho);    // chama a funcao que vai tratar de enviar informacao de transformação
                 
                 System.out.println("----------------------------------");       // estes prints foram para testar
                 System.out.println("Ordem de Transformação:");
@@ -192,7 +193,7 @@ public class Gestor_Producao implements Runnable {
                 System.out.println("A string está no formato errado");
                 break;
         }
-    }
+    }*/
 
     public void insere_vetor_pedidos_pedentes(String pedido)
     {
@@ -205,10 +206,9 @@ public class Gestor_Producao implements Runnable {
         if( pos > -1)
         {
             this.vetor_pedidos_pendentes[pos] = ordem;
+            this.vetor_aux_ped_pendentes[pos] = 0;                              // 0 -> significa que ainda não foi executado nenhuma vez... 
             
             System.out.println("O texto adicionado na posicao " + pos + " foi: " + this.vetor_pedidos_pendentes[pos]);
-            
-           executa_pedido_pendente();
         }
         
         else
@@ -236,10 +236,16 @@ public class Gestor_Producao implements Runnable {
             return pos;
         }
     }
-
+    
     @Override
     public void run()                                                           // função que vai andar sempre a percorrer o vetor de pedidos pendentes e a mandar executar
     {
+        String n_ordem;
+        String peca_1;
+        String peca_2;
+        String quantidade;
+        
+        
         while(true)
         {
             if(this.vetor_pedidos_pendentes[0] == (null))                       // o vetor está vazio logo nao precisa de executar nada
@@ -247,18 +253,164 @@ public class Gestor_Producao implements Runnable {
                 break;
             }
         
-            else                                                                // quer dizer que já tem pelo menos um pedido pendente
+            else                                                                                // quer dizer que já tem pelo menos um pedido pendente
             {
-                for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)      // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
+                for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)                     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
-                    if(this.ver_se_vetor_cheio(this.vetor_pedidos_execucao) == -1)   // verifica se pode adicionar pedidos de execução, ou seja, se já nao está tudo completo, vai ajudar para gerir as threads
+                    if(this.ver_se_vetor_cheio(this.vetor_pedidos_execucao) == -1)              // verifica se pode adicionar pedidos de execução, ou seja, se já nao está tudo completo, vai ajudar para gerir as threads
                     {
-                        break;                                                  // vetor está cheio ou seja nao posso adicionar mais pedidos em execução
+                        break;                                                                  // vetor está cheio ou seja nao posso adicionar mais pedidos em execução
                     }
                     
                     else
                     {
-                        int x = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);   // retorna a ultima posicao livre, ou seja, vai ser a thread que vou iniciar
+                        int x = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);           // retorna a ultima posicao livre, ou seja, vai ser a thread que vou iniciar
+                        
+                                                                                                // para o pedido pedente, 1º vai ver a disponibilidade das células, para ver se realmente pode ser executada ou nao
+                        Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();        // vai buscar a instancia da Classe Escolha_caminho      
+                        
+                        
+                        switch (vetor_pedidos_pendentes[i].substring(0, 1))                     // priemiro vê que tipo de instrução e separa os parametros
+                        {
+                            //-----------------------------------------------------TRANSFORMACAO-------------------------------------------------------------------------------------------------
+                            //------------------------------------------------------------------------------------------------------------------------------------------------------
+                             case "T":                                                           // se for uma transformação
+                
+                                        n_ordem  =vetor_pedidos_pendentes[i].substring(1, 4);
+                                        peca_1 = vetor_pedidos_pendentes[i].substring(4, 5);
+                                        peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
+                                        quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
+                                        
+                                        int peca_orig = Integer.parseInt(peca_1);
+                                        int peca_final = Integer.parseInt(peca_2);
+                
+                                        caminho = escolha_caminho.Caminho_Associado_Transformaçao(peca_orig, peca_final);
+                                        
+                                        if(caminho == -1)
+                                        {
+                                            break;                              // ambas as células estão indisponiveis
+                                        }
+                                        
+                                        else
+                                        {
+                                            if(this.vetor_aux_ped_pendentes[i] == 0)                                            // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                            {
+                                                Date date = new Date();
+        
+                                                String hourDate = dateFormat.format(date);                                      // devolve a hora e a data que o pedido comecou a sua execucao
+        
+                                                /*int pos =*/ insere_vetor_pedidos_execucao(this.vetor_pedidos_pendentes[i]);   // insere no vetor de pedidos de execucao;
+        
+                                                this.horaData_init_pedidos_pendentes[i] = hourDate;                             // associa na mesma posicao a hora de inicio
+                                                
+                                                // executar a funcao de tranformação
+                                                
+                                                ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
+                                                ModBus.writePLC(1, peca_orig);                                                  // passa a peca inicial para o PLC
+                                                try {                                                                           // tenho de esperar um tempo pois se nao so le a ultima instrucao
+                                                        Thread.sleep(100);
+                                                } catch(InterruptedException ex) {
+                                                    Thread.currentThread().interrupt();
+                                                    }
+                                                ModBus.writePLC(1, 0);                                                          // para só meter uma peca de cada vez
+                                                
+                                                // vou ter de ficar ler do PLC à espera que uma variavel fica ativa, que
+                                                // significa que a peça já foi trans formada e está a ser encaminhada para
+                                                // o armazem.
+                                                
+                                            }
+                                            
+                                            else if(this.vetor_aux_ped_pendentes[i] == 1)                                       // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                            {
+                                                // executar a funcao de tranformação
+                                                
+                                                ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
+                                                ModBus.writePLC(1, peca_orig);                                                  // passa a peca inicial para o PLC
+                                                try {                                                                           // tenho de esperar um tempo pois se nao so le a ultima instrucao
+                                                        Thread.sleep(100);
+                                                } catch(InterruptedException ex) {
+                                                    Thread.currentThread().interrupt();
+                                                    }
+                                                ModBus.writePLC(1, 0);                                                          // para só meter uma peca de cada vez
+                                                
+                                                // vou ter de ficar ler do PLC à espera que uma variavel fica ativa, que
+                                                // significa que a peça já foi trans formada e está a ser encaminhada para
+                                                // o armazem.
+                                                
+                                            }
+                                            
+                                            
+                                            break;
+                                        }
+                                        
+                                       
+                            
+        
+                            //--------------------------------------------------------MONTAGEM----------------------------------------------------------------------------------------------
+                            //------------------------------------------------------------------------------------------------------------------------------------------------------
+                            case "M":                                                           // se for uma montagem
+                
+                                        n_ordem  = vetor_pedidos_pendentes[i].substring(1, 4);
+                                        peca_1 = vetor_pedidos_pendentes[i].substring(4, 5);
+                                        peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
+                                        quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
+                                    
+                                        caminho = escolha_caminho.Caminho_Associado_Montagem();
+                                        
+                                        if(caminho == -1)
+                                        {
+                                            break;                              // ambas as células estão indisponiveis
+                                        }
+                                        
+                                        else
+                                        {
+                                            // executar a funcao de Montagem
+                                            
+                                            break;
+                                        }
+                             
+                            //--------------------------------------------------------DESCARGA----------------------------------------------------------------------------------------------
+                            //------------------------------------------------------------------------------------------------------------------------------------------------------
+                            case "U":                                                           // se for uma descarga
+                
+                                        n_ordem  = vetor_pedidos_pendentes[i].substring(1, 4);
+                                        peca_1 = vetor_pedidos_pendentes[i].substring(4, 5);
+                                        peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
+                                        quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
+                    
+                                        caminho = escolha_caminho.Caminho_Associado_Descarga(caminho);
+                
+                                        if(caminho == -1)
+                                        {
+                                            break;                              // ambas as células estão indisponiveis
+                                        }
+                                        
+                                        else
+                                        {
+                                            // executar a funcao de Descarga
+                                            
+                                            break;
+                                        }
+            
+                        default:
+                                System.out.println("A string está no formato errado");
+                                break;
+        }
+                        
+                        // if (caminho == -1)
+                        //{
+                        //  break;
+                        //}
+                        
+                        
+                        // else
+                        //{
+                        // vai ter de inserir pedido_execução
+                        // vai ter de actualizar a quantidade associada ao pedido
+                        //
+                        //Executa pedido (vetor_pedidos_pendentes[i], caminho); 
+                        //
+                        //}
                         
                         
                     }
