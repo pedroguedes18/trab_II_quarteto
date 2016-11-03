@@ -28,13 +28,14 @@ public class Escolha_Caminho {
         if (peça_origem == 2){
             switch (peça_final){
                 //MAQUINA A-B
-                case 1: 
+                case 1: caminho = 1;
                         //Verifica disponibilidade da célula da direita e, em
                         //caso negativo verifica célula da esquerda
                         //Só atualiza valor do caminho se houver disponibilidade
                         //Caminho 
                     break;
-                case 3: //Caminho  - (Tem caminho alternativo em B-C)
+                case 3: 
+                        //Caminho  - (Tem caminho alternativo em B-C)
                     break;
                 case 4: //Caminho  - (Tem caminho alternativo em B-C)
                     break;
@@ -50,7 +51,8 @@ public class Escolha_Caminho {
         else if (peça_origem == 1){
             switch (peça_final){
                 //MAQUINA A-B
-                case 3: //Caminho  - (Tem caminho alternativo em B-C)
+                case 3: caminho = 2;
+                        //Tem caminho alternativo em B-C
                     break;
                 case 4: //Caminho  - (Tem caminho alternativo em B-C)
                     break;
@@ -59,7 +61,8 @@ public class Escolha_Caminho {
                 case 7: //Caminho  - (Tem caminho alternativo em B-C)
                     break; 
                 //MAQUINA B-C  
-                case 2: //Caminho
+                case 2: caminho = 4;
+                        //Caminho
                     break;
                 case 6: //Caminho    
                     break;
@@ -69,7 +72,7 @@ public class Escolha_Caminho {
         else if (peça_origem == 4){
             switch (peça_final){
                 //MAQUINA A-B
-                case 5: //Caminho 
+                case 5: caminho = 3;
                     break;
                 case 7: //Caminho  - (Tem caminho alternativo em B-C)
                     break;  
@@ -78,9 +81,20 @@ public class Escolha_Caminho {
             }      
         }
         
+        else if ((peça_origem == 3) & (peça_final == 4)){
+           //MAQUINA B -PARALELO 1
+           caminho = 5;
+           //MAQUINA B -SERIE 1
+           caminho = 11;
+           //MAQUINA B -PARALELO 2
+           
+           //MAQUINA B -SERIE 2
+           
+        }
+        
         else if ((peça_origem == 5) & (peça_final == 7)){
            //MAQUINA B
-           //Caminho
+           caminho = 6;
         }
         
         else if ((peça_origem == 6) & (peça_final == 6)){
@@ -94,11 +108,15 @@ public class Escolha_Caminho {
         //para o pedido atual
     }
     
+    //Para o caso de uma Montagem
+    
     public int Caminho_Associado_Montagem (){
         int caminho = 0;
         //Ver disponibilidade e em caso afirmativo retorna Caminho
         return caminho;
     }
+    
+    //Para o caso de uma Descarga
     
     public int Caminho_Associado_Descarga (int destino){
         int caminho = 0;

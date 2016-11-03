@@ -19,6 +19,29 @@ public class Trabalho_ii {
         executorService.submit(cliente);
       
         
+        
+        
+        
+        
+        
+        //--------------------------------------------
+        /*
+        Escolha_Caminho caminho = Escolha_Caminho.getInstance();
+        
+        Celula paralelo1 = Celula.getInstance();
+        Celula paralelo2 = Celula.getInstance();
+        Celula serie1 = Celula.getInstance();
+        Celula serie2 = Celula.getInstance();
+        Celula montagem = Celula.getInstance();
+        Celula descargaPM1 = Celula.getInstance();
+        Celula descargaPM2 = Celula.getInstance();*/
+        
+        //A função DisponibilidadeCelula tem de ser usada mediante a Celula 
+        //correspondente ao caminho, por exemplo, serie1.DisponibilidadeCelula()
+        //
+    
+    
+        
     }
     
 }
