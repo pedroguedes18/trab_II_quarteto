@@ -12,8 +12,8 @@ public class Gestor_Producao implements Runnable {
     private final int [] vetor_aux_ped_pendentes = new int [15];                // vetor auxiliar de pedidos pendes que indicam se o processo já entrou em execução alguma vez
     private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    private final String [] horaData_init_pedidos_execucao = new String[7];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
-    private final String [] horaData_final_pedidos_execucao = new String[7];    // " " " "
+    private final String [] horaData_init_pedidos_pendentes = new String[15];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
+    private final String [] horaData_final_pedidos_pendentes = new String[15];    // " " " "
     private int caminho;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
@@ -88,7 +88,7 @@ public class Gestor_Producao implements Runnable {
         
         pos = insere_vetor_pedidos_execucao(pedido);                            // insere no vetor de pedidos de execucao;
         
-        this.horaData_init_pedidos_execucao[pos] = hourDate;                    // associa na mesma posicao a hora de inicio
+        this.horaData_init_pedidos_pendentes[pos] = hourDate;                    // associa na mesma posicao a hora de inicio
         
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // temos de ir ver a disponibilidade da célula primeiro --------------------------------------------------------------------------------------------
@@ -293,7 +293,52 @@ public class Gestor_Producao implements Runnable {
                                         
                                         else
                                         {
-                                            // executar a funcao de tranformação
+                                            if(this.vetor_aux_ped_pendentes[i] == 0)                                            // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                            {
+                                                Date date = new Date();
+        
+                                                String hourDate = dateFormat.format(date);                                      // devolve a hora e a data que o pedido comecou a sua execucao
+        
+                                                /*int pos =*/ insere_vetor_pedidos_execucao(this.vetor_pedidos_pendentes[i]);   // insere no vetor de pedidos de execucao;
+        
+                                                this.horaData_init_pedidos_pendentes[i] = hourDate;                             // associa na mesma posicao a hora de inicio
+                                                
+                                                // executar a funcao de tranformação
+                                                
+                                                ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
+                                                ModBus.writePLC(1, peca_orig);                                                  // passa a peca inicial para o PLC
+                                                try {                                                                           // tenho de esperar um tempo pois se nao so le a ultima instrucao
+                                                        Thread.sleep(100);
+                                                } catch(InterruptedException ex) {
+                                                    Thread.currentThread().interrupt();
+                                                    }
+                                                ModBus.writePLC(1, 0);                                                          // para só meter uma peca de cada vez
+                                                
+                                                // vou ter de ficar ler do PLC à espera que uma variavel fica ativa, que
+                                                // significa que a peça já foi trans formada e está a ser encaminhada para
+                                                // o armazem.
+                                                
+                                            }
+                                            
+                                            else if(this.vetor_aux_ped_pendentes[i] == 1)                                       // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                            {
+                                                // executar a funcao de tranformação
+                                                
+                                                ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
+                                                ModBus.writePLC(1, peca_orig);                                                  // passa a peca inicial para o PLC
+                                                try {                                                                           // tenho de esperar um tempo pois se nao so le a ultima instrucao
+                                                        Thread.sleep(100);
+                                                } catch(InterruptedException ex) {
+                                                    Thread.currentThread().interrupt();
+                                                    }
+                                                ModBus.writePLC(1, 0);                                                          // para só meter uma peca de cada vez
+                                                
+                                                // vou ter de ficar ler do PLC à espera que uma variavel fica ativa, que
+                                                // significa que a peça já foi trans formada e está a ser encaminhada para
+                                                // o armazem.
+                                                
+                                            }
+                                            
                                             
                                             break;
                                         }
