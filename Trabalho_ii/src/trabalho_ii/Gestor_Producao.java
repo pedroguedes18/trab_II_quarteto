@@ -244,6 +244,7 @@ public class Gestor_Producao implements Runnable {
         String peca_1;
         String peca_2;
         String quantidade;
+        int quant;
         
         
         while(true)
@@ -276,10 +277,10 @@ public class Gestor_Producao implements Runnable {
                             //------------------------------------------------------------------------------------------------------------------------------------------------------
                              case "T":                                                           // se for uma transformação
                 
-                                        n_ordem  =vetor_pedidos_pendentes[i].substring(1, 4);
-                                        peca_1 = vetor_pedidos_pendentes[i].substring(4, 5);
-                                        peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
-                                        quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
+                                        n_ordem  =this.vetor_pedidos_pendentes[i].substring(1, 4);
+                                        peca_1 = this.vetor_pedidos_pendentes[i].substring(4, 5);
+                                        peca_2 = this.vetor_pedidos_pendentes[i].substring(5, 6);
+                                        quantidade = this.vetor_pedidos_pendentes[i].substring(6, 8);
                                         
                                         int peca_orig = Integer.parseInt(peca_1);
                                         int peca_final = Integer.parseInt(peca_2);
@@ -304,8 +305,34 @@ public class Gestor_Producao implements Runnable {
                                                 this.horaData_init_pedidos_pendentes[i] = hourDate;                             // associa na mesma posicao a hora de inicio de o pedido pendente
                                                 
                                                 
-                                                // tenho de retirar 1 à quantidade
+                                                // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
+                                                
+                                                quant = Integer.parseInt(quantidade);                                       // converte para inteiro a quantidade
+                                                
+                                                if(quant > 0)                               // se a quantidade ainda não for zero retira um valor à quantidade
+                                                {
+                                                    quant = quant -1;
+                                                    
+                                                    quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(1, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+                                                    
+                                                    this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+                                                }
+                                                
+                                                //---------------------------------------------------------------------------------------------------------------------
+                                                
                                                 // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
+                                                
+                                                //---------------------------------------------------------------------------------------------------------------------
+                                                
+                                                /*else if( quant == 0)
+                                                {
+                                                    //tenho de remover do vetor
+                                                }*/
+                                                
+                                                //--------------------------------------------------------------------------------------------------------------------
+                                                
                                                 // executar a funcao de tranformação
                                                 
                                                 ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
@@ -321,6 +348,8 @@ public class Gestor_Producao implements Runnable {
                                                 // significa que a peça já foi trans formada e está a ser encaminhada para
                                                 // o armazem.
                                                 
+                                                // provavelmente a thread só será necessária neste momento... ainda preciso de ver melhor se o que está em cima vai demorar muito tempo
+                                                
                                                 /*
                                                 while (peça nao sair da célula)
                                                 {
@@ -334,6 +363,25 @@ public class Gestor_Producao implements Runnable {
                                             else if(this.vetor_aux_ped_pendentes[i] == 1)                                       // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                             {
                                                 // tenho de retirar 1 à quantidade
+                                                
+                                                quant = Integer.parseInt(quantidade);
+                                                
+                                                if(quant > 0)                               // se a quantidade ainda não for zero retira um valor à quantidade
+                                                {
+                                                    quant = quant -1;
+                                                    
+                                                    quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(1, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+                                                    
+                                                    this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+                                                }
+                                                
+                                                /*else if (quant == 0)
+                                                {
+                                                    // remove do vetor
+                                                }*/
+                                                
                                                 // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
                                                 // executar a funcao de tranformação
                                                 
