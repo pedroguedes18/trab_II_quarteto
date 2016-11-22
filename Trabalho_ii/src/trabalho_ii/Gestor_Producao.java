@@ -14,7 +14,8 @@ public class Gestor_Producao implements Runnable {
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private final String [] horaData_init_pedidos_pendentes = new String[15];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
     private final String [] horaData_final_pedidos_pendentes = new String[15];    // " " " "
-    private int caminho;
+    private int celula;
+    private int peca_trans_1, peca_trans_2, peca_trans_3, peca_trans_4, peca_trans_5;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
     
@@ -247,17 +248,22 @@ public class Gestor_Producao implements Runnable {
         int quant;
         
         
+        
         while(true)
         {
-            if(this.vetor_pedidos_pendentes[0] == (null))                       // o vetor está vazio logo nao precisa de executar nada
+           System.out.println(this.vetor_pedidos_pendentes[0]);
+            if(this.vetor_pedidos_pendentes[0] == null)                       // o vetor está vazio logo nao precisa de executar nada
             {
-                break;
+                //break;
+                
             }
         
             else                                                                                // quer dizer que já tem pelo menos um pedido pendente
             {
+                
                 for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)                     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
+                    //System.out.println("entrou no ciclo for");
                     if(this.ver_se_vetor_cheio(this.vetor_pedidos_execucao) == -1)              // verifica se pode adicionar pedidos de execução, ou seja, se já nao está tudo completo, vai ajudar para gerir as threads
                     {
                         break;                                                                  // vetor está cheio ou seja nao posso adicionar mais pedidos em execução
@@ -270,13 +276,14 @@ public class Gestor_Producao implements Runnable {
                                                                                                 // para o pedido pedente, 1º vai ver a disponibilidade das células, para ver se realmente pode ser executada ou nao
                         Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();        // vai buscar a instancia da Classe Escolha_caminho      
                         
+                        //System.out.println(vetor_pedidos_pendentes[i].substring(0, 1));
                         
-                        switch (vetor_pedidos_pendentes[i].substring(0, 1))                     // priemiro vê que tipo de instrução e separa os parametros
+                        switch (vetor_pedidos_pendentes[i].substring(0, 1))                     // primeiro vê que tipo de instrução e separa os parametros
                         {
                             //-----------------------------------------------------TRANSFORMACAO-------------------------------------------------------------------------------------------------
                             //------------------------------------------------------------------------------------------------------------------------------------------------------
                              case "T":                                                           // se for uma transformação
-                
+                                        System.out.println("entrou no swith");
                                         n_ordem  =this.vetor_pedidos_pendentes[i].substring(1, 4);
                                         peca_1 = this.vetor_pedidos_pendentes[i].substring(4, 5);
                                         peca_2 = this.vetor_pedidos_pendentes[i].substring(5, 6);
@@ -285,9 +292,17 @@ public class Gestor_Producao implements Runnable {
                                         int peca_orig = Integer.parseInt(peca_1);
                                         int peca_final = Integer.parseInt(peca_2);
                 
-                                        caminho = escolha_caminho.Caminho_Associado_Transformaçao(peca_orig, peca_final);
+                                        //caminho = escolha_caminho.Caminho_Associado_Transformaçao(peca_orig, peca_final);
+                                        // vou ter de receber célula
+                                        // Pa, pt1, pt2, pt3, pt4, pt5
+                                        celula = 4;
+                                        peca_trans_1 = 3;
+                                        peca_trans_2 = 4;
+                                        peca_trans_3 = 0;
+                                        peca_trans_4 = 0;
+                                        peca_trans_5 = 0;
                                         
-                                        if(caminho == -1)
+                                        if(celula == -1)                       // alterar caminho para célula
                                         {
                                             break;                              // ambas as células estão indisponiveis
                                         }
@@ -304,6 +319,8 @@ public class Gestor_Producao implements Runnable {
         
                                                 this.horaData_init_pedidos_pendentes[i] = hourDate;                             // associa na mesma posicao a hora de inicio de o pedido pendente
                                                 
+                                                System.out.println("data: " +this.horaData_init_pedidos_pendentes[i]);          // só para ver se funciona a data
+                                                
                                                 
                                                 // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
@@ -315,27 +332,44 @@ public class Gestor_Producao implements Runnable {
                                                     
                                                     quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
                                                     
-                                                    String aux = this.vetor_pedidos_pendentes[i].substring(1, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+                                                    if(quant < 10)
+                                                    {
+                                                        String zero = "0";
+                                                        
+                                                        quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
                                                     
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+                                                    
+                                                    System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
                                                 }
                                                 
                                                 //---------------------------------------------------------------------------------------------------------------------
                                                 
                                                 // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
+                                                // e fazer shift a todos os elementos do vetor
                                                 
                                                 //---------------------------------------------------------------------------------------------------------------------
                                                 
                                                 /*else if( quant == 0)
                                                 {
                                                     //tenho de remover do vetor
+                                                    //atualizar hora de fim (nao vai ser aqui; vai ser quando no ciclo while que vai estar à espera que a peça saia da célula)
+                                                    // fazer shift de todos os elementos do vetor
                                                 }*/
                                                 
                                                 //--------------------------------------------------------------------------------------------------------------------
                                                 
                                                 // executar a funcao de tranformação
                                                 
-                                                ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
+                                                ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
+                                                ModBus.writePLC(3, peca_trans_1);
+                                                ModBus.writePLC(4, peca_trans_2);
+                                                ModBus.writePLC(5, peca_trans_3);
+                                                ModBus.writePLC(6, peca_trans_4);
+                                                ModBus.writePLC(7, peca_trans_5);
                                                 ModBus.writePLC(1, peca_orig);                                                  // passa a peca inicial para o PLC
                                                 try {                                                                           // tenho de esperar um tempo pois se nao so le a ultima instrucao
                                                         Thread.sleep(100);
@@ -372,7 +406,14 @@ public class Gestor_Producao implements Runnable {
                                                     
                                                     quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
                                                     
-                                                    String aux = this.vetor_pedidos_pendentes[i].substring(1, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+                                                    if(quant < 10)
+                                                    {
+                                                        String zero = "0";
+                                                        
+                                                        quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
                                                     
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
                                                 }
@@ -385,7 +426,12 @@ public class Gestor_Producao implements Runnable {
                                                 // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
                                                 // executar a funcao de tranformação
                                                 
-                                                ModBus.writePLC(0, caminho);                                                    // passa o caminho para o PLC
+                                                ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
+                                                ModBus.writePLC(3, peca_trans_1);
+                                                ModBus.writePLC(4, peca_trans_2);
+                                                ModBus.writePLC(5, peca_trans_3);
+                                                ModBus.writePLC(6, peca_trans_4);
+                                                ModBus.writePLC(7, peca_trans_5);                                               
                                                 ModBus.writePLC(1, peca_orig);                                                  // passa a peca inicial para o PLC
                                                 try {                                                                           // tenho de esperar um tempo pois se nao so le a ultima instrucao
                                                         Thread.sleep(100);
@@ -424,9 +470,9 @@ public class Gestor_Producao implements Runnable {
                                         peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
                                         quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
                                     
-                                        caminho = escolha_caminho.Caminho_Associado_Montagem();
+                                        celula = escolha_caminho.Caminho_Associado_Montagem();
                                         
-                                        if(caminho == -1)
+                                        if(celula == -1)
                                         {
                                             break;                              // ambas as células estão indisponiveis
                                         }
@@ -447,9 +493,9 @@ public class Gestor_Producao implements Runnable {
                                         peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
                                         quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
                     
-                                        caminho = escolha_caminho.Caminho_Associado_Descarga(caminho);
+                                        celula = escolha_caminho.Caminho_Associado_Descarga(celula);
                 
-                                        if(caminho == -1)
+                                        if(celula == -1)
                                         {
                                             break;                              // ambas as células estão indisponiveis (nap existe caminhos disponiveis)
                                         }

@@ -14,9 +14,10 @@ public class Trabalho_ii {
         
         Gestor_Producao  gestor_producao = Gestor_Producao.getInstance();                                          // vou ter de utilizar para inicializar o objecto do Gestor de Producao
         
-        ExecutorService executorService = Executors.newFixedThreadPool(2);       // criar duas threads para o servidor e cliente.
+        ExecutorService executorService = Executors.newFixedThreadPool(3);       // criar duas threads para o servidor e cliente.
         executorService.submit(UDPserver);
         executorService.submit(cliente);
+        executorService.submit(gestor_producao);
       
         
         
