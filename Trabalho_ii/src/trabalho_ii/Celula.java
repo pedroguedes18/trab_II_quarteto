@@ -18,7 +18,7 @@ public class Celula {
     
     public Celula (int num_celula){             //método construct
         this.id_celula = num_celula;
-        this.disponibilidade = 0;
+        this.disponibilidade = 2;
     }
     
     public int DisponibilidadeCelula (){
@@ -32,47 +32,36 @@ public class Celula {
     
     public void TornarDisponivel(){
         
-        if(this.disponibilidade == 0){
-            this.disponibilidade = 1;
+        if(this.disponibilidade < 2){
+            this.disponibilidade = 2;
         }
     }
     
     public void TornarIndisponivel(){
         
-        if(this.disponibilidade == 1){
+        if(this.disponibilidade > 0){
             this.disponibilidade = 0;
         }
     }
     
-    //Gonçalo e Emanuel mandam variável que indica a disponibilidade 1 ou 0
-    public void AtualizarCelula (){
-        int disp = 0;                                   
-        if(id_celula == 1){
-            //disp = ModBus.readPLC(ref,count);
+    public void DecrementarDisponibilidade(){
+        if((this.disponibilidade == 2) || (this.disponibilidade == 1)){
+            this.disponibilidade -- ;
         }
-        else if(id_celula == 2){
-            //disp = ModBus.readPLC(ref,count);
+        else{
+            System.out.println("Erro a decrementar disponibilidade");
         }
-        else if(id_celula == 3){
-            //disp = ModBus.readPLC(ref,count);
-        }
-        else if(id_celula == 4){
-           //disp = ModBus.readPLC(ref,count);
-        }
-        else if(id_celula == 5){
-           //disp = ModBus.readPLC(ref,count);
-        } 
-        else if(id_celula == 6){
-           //disp = ModBus.readPLC(ref,count);
-        } 
-        else if(id_celula == 7){
-           //disp = ModBus.readPLC(ref,count);
-        } 
-        
-        return;
     }
     
-    
+     public void IncrementarDisponibilidade(){
+        if((this.disponibilidade == 0) || (this.disponibilidade == 1)){
+            this.disponibilidade ++ ;
+        }
+        else{
+            System.out.println("Erro a incrementar disponibilidade");
+        }
+    }
+ 
 }
 
 

@@ -23,10 +23,32 @@ public class Escolha_Caminho {
     
     ModBus modbus = ModBus.getInstance();   //instância do modbus para usar as suas funções
     
-    Celula celula_2 = Celula.getInstance();
-    Celula celula_4 = Celula.getInstance();
+    Celula celula_2 = new Celula(2);
+    Celula celula_4 = new Celula(4);
     
-    //Associar células à transfformação
+    
+    //Corre em ciclo infinito e atualiza disponibilidade das células
+    //AVISO
+    //SE O CICLO CORRER MAIS RÁPIDO OU MAIS LENTO DO QUE A PEÇA É ENVIADA PARA 
+    //O TAPETE DE BAIXO, PODE INCREMENTAR A DISPONIBILIDADE MAIS DO QUE UMA VEZ
+    //OU NÃO DETETAR SAÍDA DE PEÇA DA CÉLULA, RESPETIVAMENTE
+    public void AtualizarCelula (){
+        
+        while(true){
+            
+            if(modbus.readPLC(1,0) == 1){                   //Célula Série 1
+                celula_2.IncrementarDisponibilidade();
+            }
+            
+            if(modbus.readPLC(3,0) == 1){                   //Célula Série 2
+                celula_4.IncrementarDisponibilidade();
+            }
+            
+        }
+    
+    } 
+    
+    //Associar células à transformação
     
     public int Associar_Celulas_Transformaçao (int peça_origem, int peça_final){
         
@@ -39,18 +61,23 @@ public class Escolha_Caminho {
                 //P2-P1-P3
                 case 3: d2=celula_2.DisponibilidadeCelula();
                         d4=celula_4.DisponibilidadeCelula();
-                        if(d4 == 1){
+                        if(d4 == 1 || d4 == 2){                                    //Assume-se numero máximo de 2 peças numa célula 
                             i=4;
+                            celula_4.DecrementarDisponibilidade();
                         }
-                        else if(d2 == 1){
+                        else if(d2 == 1 || d2 == 2){
                             i=2;
+                            celula_2.DecrementarDisponibilidade();
                         }
                         else i=0;
                         
                         if (i > 0){
-                            //Modbus.writePLC(ref,w);     //Envia para o PLC peça_origem
-                            //Modbus.writePLC(ref,w);     //Envia para o PLC pt1
-                            //Modbus.writePLC(ref,w);     //Envia para o PLC pt2
+                            modbus.writePLC(2,i);     //Envia para o PLC celula
+                            modbus.writePLC(3,2);     //Envia para o PLC pt1
+                            modbus.writePLC(4,1);     //Envia para o PLC pt2
+                            modbus.writePLC(5,3);     //Envia para o PLC pt3
+                            modbus.writePLC(6,0);     //Envia para o PLC pt4
+                            modbus.writePLC(7,0);     //Envia para o PLC pt5          
                         }
                         
                         break;
@@ -178,8 +205,3 @@ public class Escolha_Caminho {
     }
 }
 */
-
-
-
-
-
