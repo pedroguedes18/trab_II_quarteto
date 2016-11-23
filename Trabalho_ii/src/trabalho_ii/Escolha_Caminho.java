@@ -20,6 +20,50 @@ public class Escolha_Caminho {
 	return instance;
     }
     
+    
+    ModBus modbus = ModBus.getInstance();   //instância do modbus para usar as suas funções
+    
+    Celula celula_2 = Celula.getInstance();
+    Celula celula_4 = Celula.getInstance();
+    
+    //Associar células à transfformação
+    
+    public int Associar_Celulas_Transformaçao (int peça_origem, int peça_final){
+        
+        int i=0;
+        int d2=0, d4=0;
+        int pt1, pt2, pt3, pt4, pt5;
+        
+        if (peça_origem == 2){
+            switch (peça_final){
+                //P2-P1-P3
+                case 3: d2=celula_2.DisponibilidadeCelula();
+                        d4=celula_4.DisponibilidadeCelula();
+                        if(d4 == 1){
+                            i=4;
+                        }
+                        else if(d2 == 1){
+                            i=2;
+                        }
+                        else i=0;
+                        
+                        if (i > 0){
+                            //Modbus.writePLC(ref,w);     //Envia para o PLC peça_origem
+                            //Modbus.writePLC(ref,w);     //Envia para o PLC pt1
+                            //Modbus.writePLC(ref,w);     //Envia para o PLC pt2
+                        }
+                        
+                        break;
+            }
+        }
+        
+        return i;
+    }
+}
+    //ENVIA-SE CELULA JÁ AQUI OU NO GESTOR DE PRODUÇÃO? 
+    
+ /*   
+    
     //Para o caso de uma Transformação
     
     public int Caminho_Associado_Transformaçao (int peça_origem, int peça_final){
@@ -133,3 +177,9 @@ public class Escolha_Caminho {
         return caminho;
     }
 }
+*/
+
+
+
+
+
