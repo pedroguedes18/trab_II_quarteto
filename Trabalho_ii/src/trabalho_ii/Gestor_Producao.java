@@ -17,6 +17,8 @@ public class Gestor_Producao implements Runnable {
     private int celula;
     private int peca_trans_1, peca_trans_2, peca_trans_3, peca_trans_4, peca_trans_5;
     private int numero_serie = 0;
+    private int sensorAT2;
+    private int num_serie_AT2 = 0;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
     
@@ -271,6 +273,40 @@ public class Gestor_Producao implements Runnable {
         
     }
     
+    public void thread_espera_peca(int i)                                             //para testar se funciona deste modo
+    {
+        new Thread()
+                {
+                    @Override
+                    public void run()
+                    {
+                       while (sensorAT2 != 1 && num_serie_AT2 != numero_serie)
+                       {
+                            //fica aqui à espera e vai atualizando as variaveis
+                                                        
+                            sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                            num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+                        }
+                       
+                       
+                        // vai atulizar hora de fim
+                                                    
+                        Date date_fim = new Date();
+        
+                        String hourDate_fim = dateFormat.format(date_fim);                                   // devolve a hora e a data que o pedido finalizou a sua execucao
+        
+                        horaData_final_pedidos_pendentes[i] = hourDate_fim;                             // associa na mesma posicao a hora de fim de o pedido pendente
+                                                
+                        System.out.println("data: " +horaData_final_pedidos_pendentes[i]);              // só para ver se funciona a data
+                                                    
+                                                    
+                        remove_pedido_pendente(i);
+                       
+                    }
+                }.start();
+    }
+
+    
     @Override
     public void run()                                                           // função que vai andar sempre a percorrer o vetor de pedidos pendentes e a mandar executar
     {
@@ -288,7 +324,7 @@ public class Gestor_Producao implements Runnable {
             
             if(this.vetor_pedidos_pendentes[0] != null)                                         // quer dizer que já tem pelo menos um pedido pendente; o vetor está vazio logo nao precisa de executar nada
             {
-                //System.out.println("else\n");
+                
                 for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)                     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
                     
@@ -356,7 +392,8 @@ public class Gestor_Producao implements Runnable {
 
                                                     quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
 
-                                                    if (quant < 10) {
+                                                    if (quant < 10) 
+                                                    {
                                                         String zero = "0";
 
                                                         quantidade = zero.concat(quantidade);
@@ -396,10 +433,13 @@ public class Gestor_Producao implements Runnable {
                                                     //---------------------------------------------------------------------------------------------------------------------------------------
                                                     //---------------------------------------------------------------------------------------------------------------------------------------
                                                     
-                                                    int sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
-                                                    int num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
                                                     
-                                                    while (sensorAT2 != 1 && num_serie_AT2 != numero_serie)
+                                                    sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                                                    num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+
+                                                    thread_espera_peca(i);
+                                                    
+                                                    /*while (sensorAT2 != 1 && num_serie_AT2 != numero_serie)
                                                     {
                                                         //fica aqui à espera e vai atualizando as variaveis
                                                         
@@ -418,7 +458,7 @@ public class Gestor_Producao implements Runnable {
                                                     System.out.println("data: " +this.horaData_final_pedidos_pendentes[i]);              // só para ver se funciona a data
                                                     
                                                     
-                                                    remove_pedido_pendente(i);
+                                                    remove_pedido_pendente(i);*/
                                                     
                                                     //---------------------------------------------------------------------------------------------------------------------------------------
                                                     //---------------------------------------------------------------------------------------------------------------------------------------
@@ -451,7 +491,8 @@ public class Gestor_Producao implements Runnable {
 
                                                     quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
 
-                                                    if (quant < 10) {
+                                                    if (quant < 10) 
+                                                    {
                                                         String zero = "0";
 
                                                         quantidade = zero.concat(quantidade);
@@ -463,7 +504,7 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                    escreve_PLC(peca_orig, numero_serie);
+                                                    escreve_PLC(peca_orig);
 
                                                 }
                                                 
@@ -479,37 +520,19 @@ public class Gestor_Producao implements Runnable {
                                                     //tenho de remover do vetor
                                                     //atualizar hora de fim (nao vai ser aqui; vai ser quando no ciclo while que vai estar à espera que a peça saia da célula)
                                                     // fazer shift de todos os elementos do vetor
-                                                    
-                                                    remove_pedido_pendente(i);  // talvez tenha de fazer mais tarde devido à hora de fim
-                                                    
-                                                    escreve_PLC(peca_orig, numero_serie);       // escrevo no PLC para ele avançar com a ordem
+                                                     
+                                                    escreve_PLC(peca_orig);       // escrevo no PLC para ele avançar com a ordem
 
+                                                    sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                                                    num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+
+                                                    thread_espera_peca(i);
+
+                                                    //---------------------------------------------------------------------------------------------------------------------------------------
+                                                    //---------------------------------------------------------------------------------------------------------------------------------------
                                                     
-                                                    // vou ter de ficar ler do PLC à espera que uma variavel fica ativa, que
-                                                    // significa que a peça já foi trans formada e está a ser encaminhada para
-                                                    // o armazem.
-                                                    // provavelmente a thread só será necessária neste momento... ainda preciso de ver melhor se o que está em cima vai demorar muito tempo
-                                                    
-                                                    
-                                                    /*while (peça nao sair da célula)
-                                                    {
-                                                        fica à espera;
-                                                    }*/
-                                                
                                                 }
                                                 
-                                                //--------------------------------------------------------------------------------------------------------------------
-                                                
-                                                // executar a funcao de tranformação
-                                                
-                                                ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
-                                                ModBus.writePLC(3, peca_trans_1);
-                                                ModBus.writePLC(4, peca_trans_2);
-                                                ModBus.writePLC(5, peca_trans_3);
-                                                ModBus.writePLC(6, peca_trans_4);
-                                                ModBus.writePLC(7, peca_trans_5);
-                                                
-
                                             }
                                             
                                             
