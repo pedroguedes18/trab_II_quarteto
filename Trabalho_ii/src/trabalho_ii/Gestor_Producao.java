@@ -245,7 +245,7 @@ public class Gestor_Producao implements Runnable {
     {
         numero_serie = numero_serie +1;
         
-        ModBus.writePLC(8, numero_serie);
+        //ModBus.writePLC(8, numero_serie);
         ModBus.writePLC(1, peca_origem);                                        // passa a peca inicial para o PLC
 
         try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
@@ -284,8 +284,8 @@ public class Gestor_Producao implements Runnable {
                        {
                             //fica aqui à espera e vai atualizando as variaveis
                                                         
-                            sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
-                            num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+                            //sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                            //num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
                         }
                        
                        
@@ -405,6 +405,12 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
+                                                    ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
+                                                    ModBus.writePLC(3, peca_trans_1);
+                                                    ModBus.writePLC(4, peca_trans_2);
+                                                    ModBus.writePLC(5, peca_trans_3);
+                                                    ModBus.writePLC(6, peca_trans_4);
+                                                    ModBus.writePLC(7, peca_trans_5);
                                                     escreve_PLC(peca_orig);
 
                                                 }
@@ -421,7 +427,13 @@ public class Gestor_Producao implements Runnable {
                                                     //tenho de remover do vetor
                                                     //atualizar hora de fim (nao vai ser aqui; vai ser quando no ciclo while que vai estar à espera que a peça saia da célula)
                                                     // fazer shift de todos os elementos do vetor
-                                                     
+                                                    
+                                                    ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
+                                                    ModBus.writePLC(3, peca_trans_1);
+                                                    ModBus.writePLC(4, peca_trans_2);
+                                                    ModBus.writePLC(5, peca_trans_3);
+                                                    ModBus.writePLC(6, peca_trans_4);
+                                                    ModBus.writePLC(7, peca_trans_5);
                                                     escreve_PLC(peca_orig);       // escrevo no PLC para ele avançar com a ordem
 
                                                     
@@ -434,8 +446,8 @@ public class Gestor_Producao implements Runnable {
                                                     //---------------------------------------------------------------------------------------------------------------------------------------
                                                     
                                                     
-                                                    sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
-                                                    num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+                                                    //sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                                                    //num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
 
                                                     thread_espera_peca(i);
                                                     
@@ -469,12 +481,7 @@ public class Gestor_Producao implements Runnable {
                                                 
                                                 // executar a funcao de tranformação
                                                 
-                                                /*ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
-                                                ModBus.writePLC(3, peca_trans_1);
-                                                ModBus.writePLC(4, peca_trans_2);
-                                                ModBus.writePLC(5, peca_trans_3);
-                                                ModBus.writePLC(6, peca_trans_4);
-                                                ModBus.writePLC(7, peca_trans_5);*/
+                                                
                                                 
 
                                             }
@@ -504,6 +511,12 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
+                                                    ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
+                                                    ModBus.writePLC(3, peca_trans_1);
+                                                    ModBus.writePLC(4, peca_trans_2);
+                                                    ModBus.writePLC(5, peca_trans_3);
+                                                    ModBus.writePLC(6, peca_trans_4);
+                                                    ModBus.writePLC(7, peca_trans_5);
                                                     escreve_PLC(peca_orig);
 
                                                 }
@@ -520,11 +533,17 @@ public class Gestor_Producao implements Runnable {
                                                     //tenho de remover do vetor
                                                     //atualizar hora de fim (nao vai ser aqui; vai ser quando no ciclo while que vai estar à espera que a peça saia da célula)
                                                     // fazer shift de todos os elementos do vetor
-                                                     
+                                                    
+                                                    ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
+                                                    ModBus.writePLC(3, peca_trans_1);
+                                                    ModBus.writePLC(4, peca_trans_2);
+                                                    ModBus.writePLC(5, peca_trans_3);
+                                                    ModBus.writePLC(6, peca_trans_4);
+                                                    ModBus.writePLC(7, peca_trans_5);
                                                     escreve_PLC(peca_orig);       // escrevo no PLC para ele avançar com a ordem
 
-                                                    sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
-                                                    num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+                                                    //sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                                                    //num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
 
                                                     thread_espera_peca(i);
 
