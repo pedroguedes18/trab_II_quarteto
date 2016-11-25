@@ -212,7 +212,14 @@ public class Gestor_Producao implements Runnable {
             this.vetor_pedidos_pendentes[pos] = ordem;
             this.vetor_aux_ped_pendentes[pos] = 0;                              // 0 -> significa que ainda não foi executado nenhuma vez... 
             
+            System.out.println("----------------------------------------------------------------------------------\n"
+                    + "-------------------------------------------------------------------------------------");
+            
             System.out.println("O texto adicionado na posicao " + pos + " foi: " + this.vetor_pedidos_pendentes[pos]);
+        
+            
+            System.out.println("----------------------------------------------------------------------------------\n"
+                    + "-------------------------------------------------------------------------------------");
         }
         
         else
@@ -245,7 +252,7 @@ public class Gestor_Producao implements Runnable {
     {
         numero_serie = numero_serie +1;
         
-        //ModBus.writePLC(8, numero_serie);
+        ModBus.writePLC(8, numero_serie);
         ModBus.writePLC(1, peca_origem);                                        // passa a peca inicial para o PLC
 
         try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
@@ -280,12 +287,17 @@ public class Gestor_Producao implements Runnable {
                     @Override
                     public void run()
                     {
+                        //ler como estão os valores
+                        
+                       sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                       num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0) 
+                        
                        while (sensorAT2 != 1 && num_serie_AT2 != numero_serie)
                        {
                             //fica aqui à espera e vai atualizando as variaveis
                                                         
-                            //sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
-                            //num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
+                            sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
+                            num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
                         }
                        
                        
@@ -316,8 +328,7 @@ public class Gestor_Producao implements Runnable {
         String quantidade;
         int quant;
         
-        
-        
+
         while(true)
         {
             System.out.flush();                                                 
@@ -327,7 +338,13 @@ public class Gestor_Producao implements Runnable {
                 
                 for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)                     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
-                    
+                    try {                                                                   
+                            Thread.sleep(1000);
+                        } catch(InterruptedException ex) 
+                            {
+                                Thread.currentThread().interrupt();
+                            }
+        
                     /*if(this.ver_se_vetor_cheio(this.vetor_pedidos_execucao) == -1)            // verifica se pode adicionar pedidos de execução, ou seja, se já nao está tudo completo, vai ajudar para gerir as threads
                     {
                         break;                                                                  // vetor está cheio ou seja nao posso adicionar mais pedidos em execução
@@ -360,9 +377,9 @@ public class Gestor_Producao implements Runnable {
                                         // vou ter de receber célula
                                         // Pa, pt1, pt2, pt3, pt4, pt5
                                         celula = 4;
-                                        peca_trans_1 = 3;
-                                        peca_trans_2 = 4;
-                                        peca_trans_3 = 0;
+                                        peca_trans_1 = 4;
+                                        peca_trans_2 = 5;
+                                        peca_trans_3 = 7;
                                         peca_trans_4 = 0;
                                         peca_trans_5 = 0;
                                         
