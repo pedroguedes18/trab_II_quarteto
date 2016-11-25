@@ -84,6 +84,11 @@ public class Escolha_Caminho {
             }
         }
         
+        //VERIFICAR DISPONIBILIDADE DO TAPETE INICIAL
+        //COLOCAR TAPETE INDISPONIVEL ANTES DE RETORNAR A CELULA
+
+        System.out.println("Numero de peças na celula: " + celula_4.DisponibilidadeCelula());
+        
         return i;
     }
 }

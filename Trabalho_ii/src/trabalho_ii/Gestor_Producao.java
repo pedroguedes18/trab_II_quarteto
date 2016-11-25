@@ -376,6 +376,9 @@ public class Gestor_Producao implements Runnable {
                                         //caminho = escolha_caminho.Caminho_Associado_Transformaçao(peca_orig, peca_final);
                                         // vou ter de receber célula
                                         // Pa, pt1, pt2, pt3, pt4, pt5
+                                        
+                                        celula = escolha_caminho.Associar_Celulas_Transformaçao(peca_orig, peca_final);
+                                        
                                         celula = 4;
                                         peca_trans_1 = 4;
                                         peca_trans_2 = 5;
