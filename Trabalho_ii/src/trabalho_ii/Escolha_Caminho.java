@@ -73,10 +73,10 @@ public class Escolha_Caminho {
                         
                         if (i > 0){
                             modbus.writePLC(2,i);     //Envia para o PLC celula
-                            modbus.writePLC(9,4);     //Envia peca original
+                            modbus.writePLC(9,peça_origem);     //Envia peca original
                             modbus.writePLC(3,5);     //Envia para o PLC pt1
                             modbus.writePLC(4,7);     //Envia para o PLC pt2
-                            modbus.writePLC(5,7);     //Envia para o PLC pt3
+                            modbus.writePLC(5,0);     //Envia para o PLC pt3
                             modbus.writePLC(6,0);     //Envia para o PLC pt4
                             modbus.writePLC(7,0);     //Envia para o PLC pt5          
                         }

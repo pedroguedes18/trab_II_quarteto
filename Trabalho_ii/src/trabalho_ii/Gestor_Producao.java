@@ -3,6 +3,7 @@ package trabalho_ii;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -12,8 +13,11 @@ public class Gestor_Producao implements Runnable {
     private final int [] vetor_aux_ped_pendentes = new int [15];                // vetor auxiliar de pedidos pendes que indicam se o processo já entrou em execução alguma vez
     private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    private final String [] horaData_init_pedidos_pendentes = new String[15];     // assumi que tem ligacao directa ao vetor_pedidos_execucao
-    private final String [] horaData_final_pedidos_pendentes = new String[15];    // " " " "
+    
+    private final ArrayList<String> numero_ordem = new ArrayList<> ();
+    private final ArrayList<String> horaData_init_pedidos_pendentes = new ArrayList<> ();     // assumi que tem ligacao directa ao vetor_pedidos_execucao
+    private final ArrayList<String> horaData_final_pedidos_pendentes = new ArrayList<>();    // " " " "
+    
     private int celula;
     private int peca_trans_1, peca_trans_2, peca_trans_3, peca_trans_4, peca_trans_5;
     private int numero_serie = 0;
@@ -170,7 +174,7 @@ public class Gestor_Producao implements Runnable {
         
     }
     
-    public void thread_espera_peca(int i)                                             //para testar se funciona deste modo
+    public void thread_espera_peca(String ordem_numero, int num_serie)                                             //para testar se funciona deste modo
     {
         new Thread()
                 {
@@ -179,10 +183,10 @@ public class Gestor_Producao implements Runnable {
                     {
                         //ler como estão os valores
                         
-                       sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
-                       num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0) 
+                       sensorAT2 = ModBus.readPLC(0, 0);                // readPLC(numRegisto,0)
+                       num_serie_AT2 = ModBus.readPLC(1, 0);            // readPLC(numRegisto,0) 
                         
-                       while (sensorAT2 != 1 && num_serie_AT2 != numero_serie)
+                       while (sensorAT2 != 1 && num_serie_AT2 != num_serie)
                        {
                             //fica aqui à espera e vai atualizando as variaveis
                                                         
@@ -195,15 +199,16 @@ public class Gestor_Producao implements Runnable {
                                                     
                         Date date_fim = new Date();
         
-                        String hourDate_fim = dateFormat.format(date_fim);                                   // devolve a hora e a data que o pedido finalizou a sua execucao
+                        String hourDate_fim = dateFormat.format(date_fim);                                  // devolve a hora e a data que o pedido finalizou a sua execucao
+                        
+                        int posicao = numero_ordem.indexOf(ordem_numero);                                   //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
         
-                        horaData_final_pedidos_pendentes[i] = hourDate_fim;                             // associa na mesma posicao a hora de fim de o pedido pendente
+                        horaData_final_pedidos_pendentes.add(posicao, hourDate_fim);
+
+                        //horaData_final_pedidos_pendentes[i] = hourDate_fim;                               // associa na mesma posicao a hora de fim de o pedido pendente
                                                 
-                        System.out.println("data: " +horaData_final_pedidos_pendentes[i]);              // só para ver se funciona a data
-                                                    
-                                                    
-                        remove_pedido_pendente(i);
-                       
+                        System.out.println("DATA DE FIM: " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+
                     }
                 }.start();
     }
@@ -258,19 +263,13 @@ public class Gestor_Producao implements Runnable {
 
         while(true)
         {
-            System.out.flush();                                                 
+            System.out.flush();
             
             if(this.vetor_pedidos_pendentes[0] != null)                         // quer dizer que já tem pelo menos um pedido pendente; o vetor está não esta vazio logo precisa de executar
             {
                 
                 for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
-                    /*try {                                                                   
-                            Thread.sleep(1000);
-                        } catch(InterruptedException ex) 
-                            {
-                                Thread.currentThread().interrupt();
-                            }*/
                          
                     Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();        // vai buscar a instancia da Classe Escolha_caminho      
                     
@@ -322,29 +321,42 @@ public class Gestor_Producao implements Runnable {
                                             peca_trans_5 = 0;*/
                                         
                                         
-                                            if ( celula > 0)                        // quer dizer que existe uma célula disponivel
+                                            if ( celula > 0)                    // quer dizer que existe uma célula disponivel
                                             {
-                                                if(this.vetor_aux_ped_pendentes[i] == 0)       // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
+                                                
+                                                if (numero_ordem.indexOf(n_ordem) == -1)
+                                                //if(this.vetor_aux_ped_pendentes[i] == 0)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
+                                                    numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
 
+                                                    int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
+                                                    
                                                     Date data_inicio = new Date();
         
-                                                    String hourDate_inicio = dateFormat.format(data_inicio);                        // devolve a hora e a data que o pedido comecou a sua execucao
+                                                    String hourDate_inicio = dateFormat.format(data_inicio);                            // devolve a hora e a data que o pedido comecou a sua execucao
         
-                                                    this.horaData_init_pedidos_pendentes[i] = hourDate_inicio;                      // associa na mesma posicao a hora de inicio de o pedido pendente
+                                                    //this.horaData_init_pedidos_pendentes[i] = hourDate_inicio;                        // associa na mesma posicao a hora de inicio de o pedido pendente
                                                 
-                                                    System.out.println("data: " +this.horaData_init_pedidos_pendentes[i]);          // só para ver se funciona a data
+                                                    horaData_init_pedidos_pendentes.add(pos_ordem, hourDate_inicio);                    //adiciona a hora de inicio na posicao correspondente
+                                                    
+                                                    System.out.println("DATA DE INICIO: " +horaData_init_pedidos_pendentes.get(pos_ordem));       // só para ver se funciona a data
                                                 
                                                     
                                                     quant = quant - 1;
 
-                                                    quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
+                                                    quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
                                                     if (quant < 10) 
                                                     {
                                                         String zero = "0";
 
                                                         quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
                                                     }
 
                                                     String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
@@ -378,7 +390,8 @@ public class Gestor_Producao implements Runnable {
 
                                                 }
                                             
-                                                else if(this.vetor_aux_ped_pendentes[i] == 1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                                else if (numero_ordem.indexOf(n_ordem) > -1)
+                                                //else if(this.vetor_aux_ped_pendentes[i] == 1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
@@ -393,6 +406,11 @@ public class Gestor_Producao implements Runnable {
                                                         String zero = "0";
 
                                                         quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
                                                     }
 
                                                     String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
