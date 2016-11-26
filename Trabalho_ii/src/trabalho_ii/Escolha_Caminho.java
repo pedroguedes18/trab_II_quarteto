@@ -56,10 +56,10 @@ public class Escolha_Caminho {
         int d2=0, d4=0;
         int pt1, pt2, pt3, pt4, pt5;
         
-        if (peça_origem == 2){
+        if (peça_origem == 4){
             switch (peça_final){
                 //P2-P1-P3
-                case 3: d2=celula_2.DisponibilidadeCelula();
+                case 7: d2=celula_2.DisponibilidadeCelula();
                         d4=celula_4.DisponibilidadeCelula();
                         if(d4 == 1 || d4 == 2){                                    //Assume-se numero máximo de 2 peças numa célula 
                             i=4;
@@ -73,9 +73,10 @@ public class Escolha_Caminho {
                         
                         if (i > 0){
                             modbus.writePLC(2,i);     //Envia para o PLC celula
-                            modbus.writePLC(3,2);     //Envia para o PLC pt1
-                            modbus.writePLC(4,1);     //Envia para o PLC pt2
-                            modbus.writePLC(5,3);     //Envia para o PLC pt3
+                            modbus.writePLC(9,4);     //Envia peca original
+                            modbus.writePLC(3,5);     //Envia para o PLC pt1
+                            modbus.writePLC(4,7);     //Envia para o PLC pt2
+                            modbus.writePLC(5,7);     //Envia para o PLC pt3
                             modbus.writePLC(6,0);     //Envia para o PLC pt4
                             modbus.writePLC(7,0);     //Envia para o PLC pt5          
                         }
