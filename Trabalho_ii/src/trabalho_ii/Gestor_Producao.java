@@ -182,18 +182,21 @@ public class Gestor_Producao implements Runnable {
                     public void run()
                     {
                         //ler como estão os valores
+                        System.out.println("numero serie suposto" +num_serie);
                         
                        sensorAT2 = ModBus.readPLC(0, 0);                // readPLC(numRegisto,0)
                        num_serie_AT2 = ModBus.readPLC(1, 0);            // readPLC(numRegisto,0) 
                         
-                       while (sensorAT2 != 1 && num_serie_AT2 != num_serie)
+                       while (sensorAT2 != 1 || num_serie_AT2 != num_serie)
                        {
                             //fica aqui à espera e vai atualizando as variaveis
-                                                        
+                            System.out.flush();                            
                             sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
                             num_serie_AT2 = ModBus.readPLC(1, 0);       // readPLC(numRegisto,0)
                         }
                        
+                        System.out.println("sensor_lido: " + sensorAT2);
+                        System.out.println("num_serie_lido: "+num_serie_AT2);
                        
                         // vai atulizar hora de fim
                                                     
@@ -302,7 +305,7 @@ public class Gestor_Producao implements Runnable {
                                             {
                                                 // espero que o tapete esteja livre para poder voltar a tirar uma peça
                                                 System.out.flush();
-                                                celula = 0;
+                                                //celula = 0;
                                             }
                                             
                                             System.out.println("passou o ciclo while do estado");
@@ -354,11 +357,6 @@ public class Gestor_Producao implements Runnable {
                                                         quantidade = zero.concat(quantidade);
                                                     }
                                                     
-                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
-                                                    {
-                                                        thread_espera_peca(n_ordem, numero_serie);
-                                                    }
-
                                                     String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
 
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
@@ -373,7 +371,11 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7, peca_trans_5);*/
                                                     
                                                     escreve_PLC(peca_orig);     
-
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
+                                                    }
                                                 
                                                 
                                                     //---------------------------------------------------------------------------------------------------------------------
@@ -408,11 +410,6 @@ public class Gestor_Producao implements Runnable {
                                                         quantidade = zero.concat(quantidade);
                                                     }
                                                     
-                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
-                                                    {
-                                                        thread_espera_peca(n_ordem, numero_serie);
-                                                    }
-
                                                     String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
 
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
@@ -427,7 +424,11 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7, peca_trans_5);*/
                                                     
                                                     escreve_PLC(peca_orig);
-                                                
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
+                                                    }
                                                 //---------------------------------------------------------------------------------------------------------------------
                                                 
                                                 // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
