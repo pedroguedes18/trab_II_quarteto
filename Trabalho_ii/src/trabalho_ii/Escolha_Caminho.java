@@ -32,6 +32,7 @@ public class Escolha_Caminho {
     //SE O CICLO CORRER MAIS RÁPIDO OU MAIS LENTO DO QUE A PEÇA É ENVIADA PARA 
     //O TAPETE DE BAIXO, PODE INCREMENTAR A DISPONIBILIDADE MAIS DO QUE UMA VEZ
     //OU NÃO DETETAR SAÍDA DE PEÇA DA CÉLULA, RESPETIVAMENTE
+    /*
     public void AtualizarCelula (){
         
         while(true){
@@ -47,6 +48,34 @@ public class Escolha_Caminho {
         }
     
     } 
+    */
+    
+    public void AtualizarCelula(){
+        
+        new Thread(){
+            
+            @Override
+            public void run(){
+               
+               while(true){
+                   
+                    System.out.flush();
+                   
+                    if(modbus.readPLC(5,0) == 1){                   //Célula Série 1
+                        celula_2.IncrementarDisponibilidade();
+                        //System.out.println("Incrementei a disponibilidade da célula 2");
+                    }
+            
+                    if(modbus.readPLC(6,0) == 1){                   //Célula Série 2
+                        celula_4.IncrementarDisponibilidade();
+                        //System.out.println("Incrementei a disponibilidade da célula 4");
+                    }
+            
+                } 
+            }
+        }.start();
+    }
+    
     
     //Associar células à transformação
     
@@ -58,15 +87,17 @@ public class Escolha_Caminho {
         
         if (peça_origem == 4){
             switch (peça_final){
-                //P2-P1-P3
+                //P4-P5-P7
                 case 7: d2=celula_2.DisponibilidadeCelula();
                         d4=celula_4.DisponibilidadeCelula();
                         if(d4 == 1 || d4 == 2){                                    //Assume-se numero máximo de 2 peças numa célula 
                             i=4;
+                            System.out.println("Entrei no IF4");
                             celula_4.DecrementarDisponibilidade();
                         }
                         else if(d2 == 1 || d2 == 2){
                             i=2;
+                            System.out.println("Entrei no IF2");
                             celula_2.DecrementarDisponibilidade();
                         }
                         else i=0;
@@ -75,7 +106,7 @@ public class Escolha_Caminho {
                             modbus.writePLC(2,i);     //Envia para o PLC celula
                             modbus.writePLC(9,peça_origem);     //Envia peca original
                             modbus.writePLC(3,5);     //Envia para o PLC pt1
-                            modbus.writePLC(4,0);     //Envia para o PLC pt2
+                            modbus.writePLC(4,7);     //Envia para o PLC pt2
                             modbus.writePLC(5,0);     //Envia para o PLC pt3
                             modbus.writePLC(6,0);     //Envia para o PLC pt4
                             modbus.writePLC(7,0);     //Envia para o PLC pt5          

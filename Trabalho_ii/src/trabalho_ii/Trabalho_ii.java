@@ -20,12 +20,11 @@ public class Trabalho_ii {
         executorService.submit(UDPserver);
         executorService.submit(cliente);
         executorService.submit(gestor_producao);
+        
+        Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();
+        
+        escolha_caminho.AtualizarCelula();
       
-        
-        
-        
-        
-        
         
         //--------------------------------------------
         /*

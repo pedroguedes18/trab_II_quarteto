@@ -295,12 +295,14 @@ public class Gestor_Producao implements Runnable {
                                                 
                                         if( quant == 0)
                                         {
+                                            System.out.println("quantidade = 0");
                                             remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
 
                                         }
                                         
                                         else if(quant > 0)
                                         {
+                                            System.out.println("quantidade maior que zero");
                                             while(estado != 0)
                                             {
                                                 // espero que o tapete esteja livre para poder voltar a tirar uma peça
