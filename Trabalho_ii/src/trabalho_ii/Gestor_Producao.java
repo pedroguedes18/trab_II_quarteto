@@ -141,22 +141,23 @@ public class Gestor_Producao implements Runnable {
     public void escreve_PLC(int peca_origem)
     {
         aux_estado = 1;
-        System.out.println("aux_estado: " +aux_estado);
-        System.out.println("estado: " +estado);
+        //System.out.println("aux_estado: " +aux_estado);
+        //System.out.println("estado: " +estado);
         
         numero_serie = numero_serie +1;
         
         ModBus.writePLC(8, numero_serie);
         ModBus.writePLC(1, peca_origem);                                        // passa a peca inicial para o PLC
 
-        try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
+        /*try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
             Thread.sleep(100);
         } catch(InterruptedException ex) 
             {
             Thread.currentThread().interrupt();
-            }
+            }*/
         
-        ModBus.writePLC(1, 0);   
+        //ModBus.writePLC(1, 0);   
+        System.out.println("Escreveu o que tinha de escrever");
     }
     
     public void remove_pedido_pendente(int pos)
@@ -231,14 +232,14 @@ public class Gestor_Producao implements Runnable {
                             if(estado == 0 && aux_estado == 1)                        // passa para o estado 1 quando recebe ordem do escolha caminho
                             {
                                 estado = 1;
-                                System.out.println("estado: " +estado);
+                                //System.out.println("estado: " +estado);
                                 System.out.flush();
                             }
                           
                             else if(estado == 1 && ModBus.readPLC(7,0)==1 )     // sensor AT1
                             {
                                 estado = 2;
-                                System.out.println("estado: " +estado);
+                                //System.out.println("estado: " +estado);
                                 System.out.flush();
                             }
                           
@@ -246,7 +247,7 @@ public class Gestor_Producao implements Runnable {
                             {
                                 estado = 0;
                                 aux_estado = 0;
-                                System.out.println("estado: " +estado);
+                                //System.out.println("estado: " +estado);
                                 System.out.flush();
                             }
                         }
@@ -330,6 +331,8 @@ public class Gestor_Producao implements Runnable {
                                             {
                                                 // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
                                                 
+                                                System.out.println("celula > 0");
+                                                
                                                 if (numero_ordem.indexOf(n_ordem) == -1)
                                                 //if(this.vetor_aux_ped_pendentes[i] == 0)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
@@ -372,7 +375,8 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(6, peca_trans_4);
                                                     ModBus.writePLC(7, peca_trans_5);*/
                                                     
-                                                    escreve_PLC(peca_orig);     
+                                                    escreve_PLC(peca_orig);
+                                                    ModBus.writePLC(1, 0); 
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
@@ -399,7 +403,7 @@ public class Gestor_Producao implements Runnable {
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
-                                                    quant = Integer.parseInt(quantidade);                   // converte para inteiro a quantidade
+                                                    System.out.println("o numero de ordem já se encontra no vetor");
 
                                                     quant = quant - 1;
 
@@ -426,6 +430,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7, peca_trans_5);*/
                                                     
                                                     escreve_PLC(peca_orig);
+                                                    ModBus.writePLC(1, 0); 
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {

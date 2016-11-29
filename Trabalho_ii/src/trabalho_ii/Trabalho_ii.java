@@ -16,14 +16,15 @@ public class Trabalho_ii {
         
         gestor_producao.maquina_estados();
         
+        Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();
+        
+        //escolha_caminho.AtualizarCelula();
+        
         ExecutorService executorService = Executors.newFixedThreadPool(3);       // criar duas threads para o servidor e cliente.
         executorService.submit(UDPserver);
         executorService.submit(cliente);
         executorService.submit(gestor_producao);
         
-        Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();
-        
-        escolha_caminho.AtualizarCelula();
       
         
         //--------------------------------------------
