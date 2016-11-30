@@ -1,6 +1,9 @@
 package trabalho_ii;
 
-public class Escolha_Caminho {
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class Escolha_Caminho implements Runnable {
     
     //Na classe Gestor_Produção, dentro da função Executa_Pedido_Pendente,
     //para cada caso (T,M ou D), invoca-se a função Caminho Associado com 
@@ -123,8 +126,8 @@ public class Escolha_Caminho {
         
         return i;
     }
-}
-    //ENVIA-SE CELULA JÁ AQUI OU NO GESTOR DE PRODUÇÃO? 
+    
+     //ENVIA-SE CELULA JÁ AQUI OU NO GESTOR DE PRODUÇÃO? 
     
  /*   
     
@@ -242,3 +245,33 @@ public class Escolha_Caminho {
     }
 }
 */
+
+    @Override
+    public void run() {
+        while(true)
+        {
+            try {       
+                Thread.sleep(25);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                    System.out.flush();
+                   
+                    //synchronized (this)
+                    //{
+                        if(ModBus.readPLC(5,0) == 1){                   //Célula Série 1
+                        celula_2.IncrementarDisponibilidade();
+                        //System.out.println("Incrementei a disponibilidade da célula 2");
+                        }
+                    //}
+            
+                    //synchronized (this)
+                    //{
+                        if(modbus.readPLC(6,0) == 1){                   //Célula Série 2
+                        celula_4.IncrementarDisponibilidade();
+                        //System.out.println("Incrementei a disponibilidade da célula 4");
+                        }
+                    //}
+        }
+    }
+}

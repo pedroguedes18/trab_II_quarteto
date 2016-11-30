@@ -5,6 +5,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class Gestor_Producao implements Runnable {
@@ -140,14 +143,35 @@ public class Gestor_Producao implements Runnable {
     
     public void escreve_PLC(int peca_origem)
     {
+        System.out.println("entrou no ciclo escrever");
         aux_estado = 1;
         //System.out.println("aux_estado: " +aux_estado);
         //System.out.println("estado: " +estado);
         
         numero_serie = numero_serie +1;
         
-        ModBus.writePLC(8, numero_serie);
-        ModBus.writePLC(1, peca_origem);                                        // passa a peca inicial para o PLC
+        //synchronized (this)
+        //{
+        ReentrantLock lock = new ReentrantLock();
+
+       
+        lock.lock();
+        try {
+            System.out.println("vai enviar para o PLC\n");
+            ModBus.writePLC(8, numero_serie);
+            System.out.println("já enviou 1\n");
+            System.out.flush();
+            ModBus.writePLC(1, peca_origem);
+            System.out.println("já enviou 2\n");
+            System.out.flush();
+        } finally 
+            {
+                lock.unlock();
+            }
+    
+
+        //}
+                                       // passa a peca inicial para o PLC
 
         /*try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
             Thread.sleep(100);
@@ -157,7 +181,7 @@ public class Gestor_Producao implements Runnable {
             }*/
         
         //ModBus.writePLC(1, 0);   
-        System.out.println("Escreveu o que tinha de escrever");
+        System.out.println("Escreveu o que tinha de escrever\n");
     }
     
     public void remove_pedido_pendente(int pos)
@@ -228,6 +252,11 @@ public class Gestor_Producao implements Runnable {
                         System.out.println("estado: " +estado);
                         while(true)
                         {
+                            try {       
+                                    Thread.sleep(25);
+                                } catch (InterruptedException ex) {
+                                         Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                             System.out.flush();
                             if(estado == 0 && aux_estado == 1)                        // passa para o estado 1 quando recebe ordem do escolha caminho
                             {
@@ -374,7 +403,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(5, peca_trans_3);
                                                     ModBus.writePLC(6, peca_trans_4);
                                                     ModBus.writePLC(7, peca_trans_5);*/
-                                                    
+                                                    System.out.println("antes de escrever");
                                                     escreve_PLC(peca_orig);
                                                     ModBus.writePLC(1, 0); 
                                                     
@@ -429,6 +458,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(6, peca_trans_4);
                                                     ModBus.writePLC(7, peca_trans_5);*/
                                                     
+                                                    System.out.println("antes de escrever");
                                                     escreve_PLC(peca_orig);
                                                     ModBus.writePLC(1, 0); 
                                                     

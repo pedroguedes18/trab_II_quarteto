@@ -4,6 +4,7 @@ package trabalho_ii;
 import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 
 public class Trabalho_ii {
@@ -14,18 +15,19 @@ public class Trabalho_ii {
         
         Gestor_Producao  gestor_producao = Gestor_Producao.getInstance();                                          // vou ter de utilizar para inicializar o objecto do Gestor de Producao
         
-        gestor_producao.maquina_estados();
         
         Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();
         
         //escolha_caminho.AtualizarCelula();
         
-        ExecutorService executorService = Executors.newFixedThreadPool(3);       // criar duas threads para o servidor e cliente.
-        executorService.submit(UDPserver);
-        executorService.submit(cliente);
-        executorService.submit(gestor_producao);
+        ExecutorService executorService = Executors.newFixedThreadPool(4);       // criar duas threads para o servidor e cliente.
+
+        executorService.execute(UDPserver);
+        executorService.execute(cliente);
+        executorService.execute(gestor_producao);
         
-      
+        executorService.execute(escolha_caminho);
+        gestor_producao.maquina_estados();
         
         //--------------------------------------------
         /*
