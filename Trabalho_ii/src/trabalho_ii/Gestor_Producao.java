@@ -157,30 +157,18 @@ public class Gestor_Producao implements Runnable {
        
         lock.lock();
         try {
-            System.out.println("vai enviar para o PLC\n");
+            //System.out.println("vai enviar para o PLC\n");
             ModBus.writePLC(8, numero_serie);
-            System.out.println("já enviou 1\n");
-            System.out.flush();
+            //System.out.println("já enviou 1\n");
+            //System.out.flush();
             ModBus.writePLC(1, peca_origem);
-            System.out.println("já enviou 2\n");
-            System.out.flush();
+            //System.out.println("já enviou 2\n");
+            //System.out.flush();
         } finally 
             {
                 lock.unlock();
             }
     
-
-        //}
-                                       // passa a peca inicial para o PLC
-
-        /*try {                                                                   // tenho de esperar um tempo pois se nao so le a ultima instrucao
-            Thread.sleep(100);
-        } catch(InterruptedException ex) 
-            {
-            Thread.currentThread().interrupt();
-            }*/
-        
-        //ModBus.writePLC(1, 0);   
         System.out.println("Escreveu o que tinha de escrever\n");
     }
     
@@ -490,17 +478,208 @@ public class Gestor_Producao implements Runnable {
                                     
                                         //celula = escolha_caminho.Caminho_Associado_Montagem();
                                         
-                                        if(celula == -1)
+                                        int peca_baixo = Integer.parseInt(peca_1);
+                                        int peca_cima = Integer.parseInt(peca_2);
+                                        
+                                        quant = Integer.parseInt(quantidade);                                       // converte para inteiro a quantidade
+                                                
+                                        if( quant == 0)
                                         {
-                                            break;                              // ambas as células estão indisponiveis
+                                            System.out.println("quantidade = 0");
+                                            remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
+
                                         }
                                         
-                                        else
+                                        else if(quant > 0)
                                         {
-                                            // executar a funcao de Montagem
+                                            System.out.println("quantidade maior que zero");
+                                            while(estado != 0)
+                                            {
+                                                // espero que o tapete esteja livre para poder voltar a tirar uma peça
+                                                System.out.flush();
+                                                //celula = 0;
+                                            }
                                             
-                                            break;
+                                            System.out.println("passou o ciclo while do estado");
+                                        
+                                            // já está livre o tapete do armazém
+                                        
+                                            celula = 5; //para ir para a montagem.. tenho de ver se está livre
+                                            
+                                            System.out.println("celula: " +celula);
+                                        
+                                        
+                                            if ( celula > 0)                    // quer dizer que existe uma célula disponivel
+                                            {
+                                                // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
+                                                
+                                                System.out.println("celula > 0");
+                                                
+                                                if (numero_ordem.indexOf(n_ordem) == -1)                                               // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                {
+                                                    numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
+
+                                                    int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
+                                                    
+                                                    Date data_inicio = new Date();
+        
+                                                    String hourDate_inicio = dateFormat.format(data_inicio);                            // devolve a hora e a data que o pedido comecou a sua execucao
+                                                
+                                                    horaData_init_pedidos_pendentes.add(pos_ordem, hourDate_inicio);                    //adiciona a hora de inicio na posicao correspondente
+                                                    
+                                                    System.out.println("DATA DE INICIO: " +horaData_init_pedidos_pendentes.get(pos_ordem));       // só para ver se funciona a data
+                                                
+                                                    
+                                                    quant = quant - 1;
+
+                                                    quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
+
+                                                    if (quant < 10) 
+                                                    {
+                                                        String zero = "0";
+
+                                                        quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+
+                                                    this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+
+                                                    System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
+
+                                                   
+                                                    
+                                                    int peca_original = 0;
+                                                    peca_trans_1 = 15;
+                                                    peca_trans_2 = 0;
+                                                    peca_trans_3 = 0;
+                                                    peca_trans_4 = 0;
+                                                    peca_trans_5 = 0;
+                                                    
+                                                    ModBus.writePLC(2,celula);           //Envia para o PLC celula
+                                                    ModBus.writePLC(9,peca_original);    //Envia peca original
+                                                    ModBus.writePLC(3,peca_trans_1);     //Envia para o PLC pt1
+                                                    ModBus.writePLC(4,peca_trans_2);     //Envia para o PLC pt2
+                                                    ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
+                                                    ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
+                                                    ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    
+                                                    escreve_PLC(peca_baixo);            //manda a peça de baixo
+                                                    ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
+                                                    
+                                                    
+                                                    while(estado != 0)                  // só quando o tapete ficar novamente livre é que vai mandar a peça de cima
+                                                    {
+                                                        // espero que o tapete esteja livre para poder voltar a tirar uma peça
+                                                        System.out.flush();
+                                                        //celula = 0;
+                                                    }
+                                                    
+                                                    peca_original = 13;
+                                                    peca_trans_1 = 0;
+                                                    peca_trans_2 = 0;
+                                                    peca_trans_3 = 0;
+                                                    peca_trans_4 = 0;
+                                                    peca_trans_5 = 0;
+                                                    
+                                                    ModBus.writePLC(2,celula);           //Envia para o PLC celula
+                                                    ModBus.writePLC(9,peca_original);    //Envia peca original
+                                                    ModBus.writePLC(3,peca_trans_1);     //Envia para o PLC pt1
+                                                    ModBus.writePLC(4,peca_trans_2);     //Envia para o PLC pt2
+                                                    ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
+                                                    ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
+                                                    ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    
+                                                    escreve_PLC(peca_cima);            //manda a peça de cima
+                                                    ModBus.writePLC(1, 0);
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
+                                                    }
+                                                
+                                                }
+                                            
+                                                else if (numero_ordem.indexOf(n_ordem) > -1)
+                                                //else if(this.vetor_aux_ped_pendentes[i] == 1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                                {
+                                                    // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
+                                                
+                                                    System.out.println("o numero de ordem já se encontra no vetor");
+
+                                                    quant = quant - 1;
+
+                                                    quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
+
+                                                    if (quant < 10) 
+                                                    {
+                                                        String zero = "0";
+
+                                                        quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+
+                                                    this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+
+                                                    System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
+
+                                                   
+                                                    
+                                                    int peca_original = 0;
+                                                    peca_trans_1 = 15;
+                                                    peca_trans_2 = 0;
+                                                    peca_trans_3 = 0;
+                                                    peca_trans_4 = 0;
+                                                    peca_trans_5 = 0;
+                                                    
+                                                    ModBus.writePLC(2,celula);           //Envia para o PLC celula
+                                                    ModBus.writePLC(9,peca_original);    //Envia peca original
+                                                    ModBus.writePLC(3,peca_trans_1);     //Envia para o PLC pt1
+                                                    ModBus.writePLC(4,peca_trans_2);     //Envia para o PLC pt2
+                                                    ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
+                                                    ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
+                                                    ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    
+                                                    escreve_PLC(peca_baixo);            //manda a peça de baixo
+                                                    ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
+                                                    
+                                                    
+                                                    while(estado != 0)                  // só quando o tapete ficar novamente livre é que vai mandar a peça de cima
+                                                    {
+                                                        // espero que o tapete esteja livre para poder voltar a tirar uma peça
+                                                        System.out.flush();
+                                                        //celula = 0;
+                                                    }
+                                                    
+                                                    peca_original = 13;
+                                                    peca_trans_1 = 0;
+                                                    peca_trans_2 = 0;
+                                                    peca_trans_3 = 0;
+                                                    peca_trans_4 = 0;
+                                                    peca_trans_5 = 0;
+                                                    
+                                                    ModBus.writePLC(2,celula);           //Envia para o PLC celula
+                                                    ModBus.writePLC(9,peca_original);    //Envia peca original
+                                                    ModBus.writePLC(3,peca_trans_1);     //Envia para o PLC pt1
+                                                    ModBus.writePLC(4,peca_trans_2);     //Envia para o PLC pt2
+                                                    ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
+                                                    ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
+                                                    ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    
+                                                    escreve_PLC(peca_cima);            //manda a peça de cima
+                                                    ModBus.writePLC(1, 0);
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
+                                                    }
+
+                                                }
+                                            }
                                         }
+                                            
+                                        break;
                              
                             //--------------------------------------------------------DESCARGA----------------------------------------------------------------------------------------------
                             //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -528,28 +707,11 @@ public class Gestor_Producao implements Runnable {
                         default:
                                 System.out.println("A string está no formato errado");
                                 break;
-        }
+                    }
                         
-                        // if (caminho == -1)
-                        //{
-                        //  break;
-                        //}
-                        
-                        
-                        // else
-                        //{
-                        // vai ter de inserir pedido_execução
-                        // vai ter de actualizar a quantidade associada ao pedido
-                        //
-                        //Executa pedido (vetor_pedidos_pendentes[i], caminho); 
-                        //
-                        //}
-                        
-                        
-                    //}
                 
                 }
-        }
+            }
         }
     }
 
