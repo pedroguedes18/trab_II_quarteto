@@ -18,8 +18,9 @@ public class Gestor_Producao implements Runnable {
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     
     private final ArrayList<String> numero_ordem = new ArrayList<> ();
-    private final ArrayList<String> horaData_init_pedidos_pendentes = new ArrayList<> ();     // assumi que tem ligacao directa ao vetor_pedidos_execucao
-    private final ArrayList<String> horaData_final_pedidos_pendentes = new ArrayList<>();    // " " " "
+    private final ArrayList<String> horaData_init_pedidos_pendentes = new ArrayList<> ();       // assumi que tem ligacao directa ao vetor_pedidos_execucao
+    private final ArrayList<String> horaData_final_pedidos_pendentes = new ArrayList<>();       // " " " "
+    private final ArrayList<String> horaData_entrada_pedidos_pendentes = new ArrayList<>();     // hora de entrada dos pedidos pendentes
     
     private int celula;
     private int peca_trans_1, peca_trans_2, peca_trans_3, peca_trans_4, peca_trans_5;
@@ -113,6 +114,18 @@ public class Gestor_Producao implements Runnable {
             
             System.out.println("----------------------------------------------------------------------------------\n"
                     + "-------------------------------------------------------------------------------------");
+            
+            // vou associar uma hora de entrada do pedido no sistema, ou seja, ao numero de ordem
+            
+            String n_ord  =this.vetor_pedidos_pendentes[pos].substring(1, 4);
+            
+            int n_ord_int = Integer.parseInt(n_ord);
+                                                    
+            Date data_inicio = new Date();
+        
+            String hourDate_inicio = dateFormat.format(data_inicio);                            // devolve a hora e a data que o pedido comecou a sua execucao
+                                           
+            horaData_entrada_pedidos_pendentes.add(n_ord_int, hourDate_inicio);                 // na posição igual ao seu numero de ordem associa-lhe a data do vetor de pedidos pendentes
         }
         
         else
@@ -217,13 +230,13 @@ public class Gestor_Producao implements Runnable {
         
                         String hourDate_fim = dateFormat.format(date_fim);                                  // devolve a hora e a data que o pedido finalizou a sua execucao
                         
-                        int posicao = numero_ordem.indexOf(ordem_numero);                                   //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
+                        int posicao = Integer.parseInt(ordem_numero);                                   //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
         
                         horaData_final_pedidos_pendentes.add(posicao, hourDate_fim);
-
-                        //horaData_final_pedidos_pendentes[i] = hourDate_fim;                               // associa na mesma posicao a hora de fim de o pedido pendente
-                                                
-                        System.out.println("DATA DE FIM: " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                      
+                        System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
+                        System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
+                        System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
 
                     }
                 }.start();
@@ -299,7 +312,7 @@ public class Gestor_Producao implements Runnable {
                             //-----------------------------------------------------TRANSFORMACAO-------------------------------------------------------------------------------------------------
                             //------------------------------------------------------------------------------------------------------------------------------------------------------
                              case "T":                                                           // se for uma transformação
-                                        System.out.println("entrou no swith");
+                                        //System.out.println("entrou no swith");
                                         n_ordem  =this.vetor_pedidos_pendentes[i].substring(1, 4);
                                         peca_1 = this.vetor_pedidos_pendentes[i].substring(4, 5);
                                         peca_2 = this.vetor_pedidos_pendentes[i].substring(5, 6);
@@ -313,14 +326,14 @@ public class Gestor_Producao implements Runnable {
                                                 
                                         if( quant == 0)
                                         {
-                                            System.out.println("quantidade = 0");
+                                            //System.out.println("quantidade = 0");
                                             remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
 
                                         }
                                         
                                         else if(quant > 0)
                                         {
-                                            System.out.println("quantidade maior que zero");
+                                            //System.out.println("quantidade maior que zero");
                                             while(estado != 0)
                                             {
                                                 // espero que o tapete esteja livre para poder voltar a tirar uma peça
@@ -328,44 +341,35 @@ public class Gestor_Producao implements Runnable {
                                                 //celula = 0;
                                             }
                                             
-                                            System.out.println("passou o ciclo while do estado");
+                                            //System.out.println("passou o ciclo while do estado");
                                         
                                             // já está livre o tapete do armazém
                                         
                                             celula = escolha_caminho.Associar_Celulas_Transformaçao(peca_orig, peca_final);
                                         
-                                            System.out.println("celula: " +celula);
-                                        
-                                            /*celula = 4;
-                                            peca_trans_1 = 4;
-                                            peca_trans_2 = 5;
-                                            peca_trans_3 = 7;
-                                            peca_trans_4 = 0;
-                                            peca_trans_5 = 0;*/
-                                        
-                                        
+                                            //System.out.println("celula: " +celula);
+
                                             if ( celula > 0)                    // quer dizer que existe uma célula disponivel
                                             {
                                                 // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
                                                 
-                                                System.out.println("celula > 0");
+                                                //System.out.println("celula > 0");
                                                 
-                                                if (numero_ordem.indexOf(n_ordem) == -1)
-                                                //if(this.vetor_aux_ped_pendentes[i] == 0)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                if (numero_ordem.indexOf(n_ordem) == -1)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
                                                     numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
 
-                                                    int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
+                                                    //int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
+                                                    
+                                                    int n_ord_int = Integer.parseInt(n_ordem);
                                                     
                                                     Date data_inicio = new Date();
         
                                                     String hourDate_inicio = dateFormat.format(data_inicio);                            // devolve a hora e a data que o pedido comecou a sua execucao
         
-                                                    //this.horaData_init_pedidos_pendentes[i] = hourDate_inicio;                        // associa na mesma posicao a hora de inicio de o pedido pendente
-                                                
-                                                    horaData_init_pedidos_pendentes.add(pos_ordem, hourDate_inicio);                    //adiciona a hora de inicio na posicao correspondente
+                                                    horaData_init_pedidos_pendentes.add(n_ord_int, hourDate_inicio);                    //adiciona a hora de inicio na posicao correspondente
                                                     
-                                                    System.out.println("DATA DE INICIO: " +horaData_init_pedidos_pendentes.get(pos_ordem));       // só para ver se funciona a data
+                                                    System.out.println("DATA DE INICIO: " +horaData_init_pedidos_pendentes.get(n_ord_int));       // só para ver se funciona a data
                                                 
                                                     
                                                     quant = quant - 1;
@@ -385,13 +389,7 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                    /*ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
-                                                    ModBus.writePLC(3, peca_trans_1);
-                                                    ModBus.writePLC(4, peca_trans_2);
-                                                    ModBus.writePLC(5, peca_trans_3);
-                                                    ModBus.writePLC(6, peca_trans_4);
-                                                    ModBus.writePLC(7, peca_trans_5);*/
-                                                    System.out.println("antes de escrever");
+                                                    //System.out.println("antes de escrever");
                                                     escreve_PLC(peca_orig);
                                                     ModBus.writePLC(1, 0); 
                                                     
@@ -399,28 +397,13 @@ public class Gestor_Producao implements Runnable {
                                                     {
                                                         thread_espera_peca(n_ordem, numero_serie);
                                                     }
-                                                
-                                                
-                                                    //---------------------------------------------------------------------------------------------------------------------
-                                                
-                                                    // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
-                                                    // e fazer shift a todos os elementos do vetor
-                                                
-                                                    //---------------------------------------------------------------------------------------------------------------------
-                                                
-
-                                                
-                                                    //--------------------------------------------------------------------------------------------------------------------
-          
-
                                                 }
                                             
-                                                else if (numero_ordem.indexOf(n_ordem) > -1)
-                                                //else if(this.vetor_aux_ped_pendentes[i] == 1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                                else if (numero_ordem.indexOf(n_ordem) > -1)             // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
-                                                    System.out.println("o numero de ordem já se encontra no vetor");
+                                                    //System.out.println("o numero de ordem já se encontra no vetor");
 
                                                     quant = quant - 1;
 
@@ -437,16 +420,9 @@ public class Gestor_Producao implements Runnable {
 
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
 
-                                                    System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
+                                                    //System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                    /*ModBus.writePLC(2, celula);                                                    // passa a celula para o PLC
-                                                    ModBus.writePLC(3, peca_trans_1);
-                                                    ModBus.writePLC(4, peca_trans_2);
-                                                    ModBus.writePLC(5, peca_trans_3);
-                                                    ModBus.writePLC(6, peca_trans_4);
-                                                    ModBus.writePLC(7, peca_trans_5);*/
-                                                    
-                                                    System.out.println("antes de escrever");
+                                                    //System.out.println("antes de escrever");
                                                     escreve_PLC(peca_orig);
                                                     ModBus.writePLC(1, 0); 
                                                     
@@ -454,13 +430,7 @@ public class Gestor_Producao implements Runnable {
                                                     {
                                                         thread_espera_peca(n_ordem, numero_serie);
                                                     }
-                                                //---------------------------------------------------------------------------------------------------------------------
                                                 
-                                                // verificar se a quantidade è zero, porque se for, tenho de remover do vetor pedidos pendentes
-                                                // e fazer shift a todos os elementos do vetor
-                                                
-                                                //---------------------------------------------------------------------------------------------------------------------
-    
                                                 }
                                             }
                                         }
@@ -476,7 +446,6 @@ public class Gestor_Producao implements Runnable {
                                         peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
                                         quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
                                     
-                                        //celula = escolha_caminho.Caminho_Associado_Montagem();
                                         
                                         int peca_baixo = Integer.parseInt(peca_1);
                                         int peca_cima = Integer.parseInt(peca_2);
@@ -486,7 +455,7 @@ public class Gestor_Producao implements Runnable {
                                         if( quant == 0)
                                         {
                                             System.out.println("quantidade = 0");
-                                            remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
+                                            remove_pedido_pendente(i);              // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
 
                                         }
                                         
@@ -548,7 +517,7 @@ public class Gestor_Producao implements Runnable {
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
                                                    
-                                                    
+                                                    //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     int peca_original = 0;
                                                     peca_trans_1 = 15;
                                                     peca_trans_2 = 0;
@@ -563,6 +532,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
                                                     ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    //---------------------------------------------------------------------------------------------------------
                                                     
                                                     escreve_PLC(peca_baixo);            //manda a peça de baixo
                                                     ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
@@ -575,6 +545,7 @@ public class Gestor_Producao implements Runnable {
                                                         //celula = 0;
                                                     }
                                                     
+                                                    //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     peca_original = 13;
                                                     peca_trans_1 = 0;
                                                     peca_trans_2 = 0;
@@ -589,6 +560,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
                                                     ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    //-------------------------------------------------------------------------------------------------------
                                                     
                                                     escreve_PLC(peca_cima);            //manda a peça de cima
                                                     ModBus.writePLC(1, 0);
@@ -600,8 +572,7 @@ public class Gestor_Producao implements Runnable {
                                                 
                                                 }
                                             
-                                                else if (numero_ordem.indexOf(n_ordem) > -1)
-                                                //else if(this.vetor_aux_ped_pendentes[i] == 1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                                else if (numero_ordem.indexOf(n_ordem) > -1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
@@ -625,7 +596,7 @@ public class Gestor_Producao implements Runnable {
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
                                                    
-                                                    
+                                                    //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     int peca_original = 0;
                                                     peca_trans_1 = 15;
                                                     peca_trans_2 = 0;
@@ -640,6 +611,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
                                                     ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    //--------------------------------------------------------------------------------------------------------
                                                     
                                                     escreve_PLC(peca_baixo);            //manda a peça de baixo
                                                     ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
@@ -652,6 +624,7 @@ public class Gestor_Producao implements Runnable {
                                                         //celula = 0;
                                                     }
                                                     
+                                                    //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     peca_original = 13;
                                                     peca_trans_1 = 0;
                                                     peca_trans_2 = 0;
@@ -666,6 +639,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
                                                     ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    //-------------------------------------------------------------------------------------------------------
                                                     
                                                     escreve_PLC(peca_cima);            //manda a peça de cima
                                                     ModBus.writePLC(1, 0);
@@ -690,30 +664,164 @@ public class Gestor_Producao implements Runnable {
                                         peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
                                         quantidade = vetor_pedidos_pendentes[i].substring(6, 8);
                     
-                                        //celula = escolha_caminho.Caminho_Associado_Descarga(celula);
-                
-                                        if(celula == -1)
+                                        
+                                        int peca_descarga = Integer.parseInt(peca_1);
+                                        int local_descarga = Integer.parseInt(peca_2);
+                                        
+                                        quant = Integer.parseInt(quantidade);                                       // converte para inteiro a quantidade
+                                                
+                                        if( quant == 0)
                                         {
-                                            break;                              // ambas as células estão indisponiveis (nap existe caminhos disponiveis)
+                                            System.out.println("quantidade = 0");
+                                            remove_pedido_pendente(i);              // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
+
                                         }
                                         
-                                        else
+                                        else if(quant > 0)
                                         {
-                                            // executar a funcao de Descarga
+                                            System.out.println("quantidade maior que zero");
+                                            while(estado != 0)
+                                            {
+                                                // espero que o tapete esteja livre para poder voltar a tirar uma peça
+                                                System.out.flush();
+                                                //celula = 0;
+                                            }
                                             
-                                            break;
+                                            System.out.println("passou o ciclo while do estado");
+                                        
+                                            // já está livre o tapete do armazém
+                                        
+                                            
+                                            // VAI TER DE VER SE O LOCAL DE DESCARGA ESTÁ LIVRE
+                                            celula = local_descarga; //para ir para a montagem.. tenho de ver se está livre
+                                            
+                                            System.out.println("celula: " +celula);
+                                        
+                                        
+                                            if ( celula > 0)                    // quer dizer que existe uma célula disponivel
+                                            {
+                                                // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
+                                                
+                                                System.out.println("celula > 0");
+                                                
+                                                if (numero_ordem.indexOf(n_ordem) == -1)                                               // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                {
+                                                    numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
+
+                                                    int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
+                                                    
+                                                    Date data_inicio = new Date();
+        
+                                                    String hourDate_inicio = dateFormat.format(data_inicio);                            // devolve a hora e a data que o pedido comecou a sua execucao
+                                                
+                                                    horaData_init_pedidos_pendentes.add(pos_ordem, hourDate_inicio);                    //adiciona a hora de inicio na posicao correspondente
+                                                    
+                                                    System.out.println("DATA DE INICIO: " +horaData_init_pedidos_pendentes.get(pos_ordem));       // só para ver se funciona a data
+                                                
+                                                    
+                                                    quant = quant - 1;
+
+                                                    quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
+
+                                                    if (quant < 10) 
+                                                    {
+                                                        String zero = "0";
+
+                                                        quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+
+                                                    this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+
+                                                    System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
+
+                                                   
+                                                    //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
+                                                    int peca_original = 0;
+                                                    peca_trans_1 = 0;
+                                                    peca_trans_2 = 0;
+                                                    peca_trans_3 = 0;
+                                                    peca_trans_4 = 0;
+                                                    peca_trans_5 = 0;
+                                                    
+                                                    ModBus.writePLC(2,celula);           //Envia para o PLC celula
+                                                    ModBus.writePLC(9,peca_original);    //Envia peca original
+                                                    ModBus.writePLC(3,peca_trans_1);     //Envia para o PLC pt1
+                                                    ModBus.writePLC(4,peca_trans_2);     //Envia para o PLC pt2
+                                                    ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
+                                                    ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
+                                                    ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    //---------------------------------------------------------------------------------------------------------
+                                                    
+                                                    escreve_PLC(peca_descarga);         //manda a peça de baixo
+                                                    ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
+                                                   
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
+                                                    }
+                                                
+                                                }
+                                            
+                                                else if (numero_ordem.indexOf(n_ordem) > -1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
+                                                {
+                                                    // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
+                                                
+                                                    System.out.println("o numero de ordem já se encontra no vetor");
+
+                                                    quant = quant - 1;
+
+                                                    quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
+
+                                                    if (quant < 10) 
+                                                    {
+                                                        String zero = "0";
+
+                                                        quantidade = zero.concat(quantidade);
+                                                    }
+                                                    
+                                                    String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
+
+                                                    this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
+
+                                                    System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
+
+                                                   
+                                                    //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
+                                                    int peca_original = 0;
+                                                    peca_trans_1 = 0;
+                                                    peca_trans_2 = 0;
+                                                    peca_trans_3 = 0;
+                                                    peca_trans_4 = 0;
+                                                    peca_trans_5 = 0;
+                                                    
+                                                    ModBus.writePLC(2,celula);           //Envia para o PLC celula
+                                                    ModBus.writePLC(9,peca_original);    //Envia peca original
+                                                    ModBus.writePLC(3,peca_trans_1);     //Envia para o PLC pt1
+                                                    ModBus.writePLC(4,peca_trans_2);     //Envia para o PLC pt2
+                                                    ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
+                                                    ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
+                                                    ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
+                                                    //---------------------------------------------------------------------------------------------------------
+                                                    
+                                                    escreve_PLC(peca_descarga);         //manda a peça de baixo
+                                                    ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
+                                                   
+                                                    
+                                                    if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
+                                                    {
+                                                        thread_espera_peca(n_ordem, numero_serie);
+                                                    }
+                                                    
+                                                }
+                                                    
+                                            }
                                         }
-            
-                        default:
-                                System.out.println("A string está no formato errado");
-                                break;
                     }
-                        
-                
                 }
             }
         }
     }
-
-
 }

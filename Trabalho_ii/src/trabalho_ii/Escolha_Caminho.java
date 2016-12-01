@@ -91,16 +91,16 @@ public class Escolha_Caminho implements Runnable {
         if (peça_origem == 4){
             switch (peça_final){
                 //P4-P5-P7
-                case 7: d2=celula_2.DisponibilidadeCelula();
+                case 5: d2=celula_2.DisponibilidadeCelula();
                         d4=celula_4.DisponibilidadeCelula();
                         if(d4 == 1 || d4 == 2){                                    //Assume-se numero máximo de 2 peças numa célula 
                             i=4;
-                            System.out.println("Entrei no IF4");
+                            //System.out.println("Entrei no IF4");
                             celula_4.DecrementarDisponibilidade();
                         }
                         else if(d2 == 1 || d2 == 2){
                             i=2;
-                            System.out.println("Entrei no IF2");
+                            //System.out.println("Entrei no IF2");
                             celula_2.DecrementarDisponibilidade();
                         }
                         else i=0;
@@ -109,7 +109,7 @@ public class Escolha_Caminho implements Runnable {
                             modbus.writePLC(2,i);     //Envia para o PLC celula
                             modbus.writePLC(9,peça_origem);     //Envia peca original
                             modbus.writePLC(3,5);     //Envia para o PLC pt1
-                            modbus.writePLC(4,7);     //Envia para o PLC pt2
+                            modbus.writePLC(4,0);     //Envia para o PLC pt2
                             modbus.writePLC(5,0);     //Envia para o PLC pt3
                             modbus.writePLC(6,0);     //Envia para o PLC pt4
                             modbus.writePLC(7,0);     //Envia para o PLC pt5          
@@ -122,7 +122,7 @@ public class Escolha_Caminho implements Runnable {
         //VERIFICAR DISPONIBILIDADE DO TAPETE INICIAL
         //COLOCAR TAPETE INDISPONIVEL ANTES DE RETORNAR A CELULA
 
-        System.out.println("Numero de peças na celula: " + celula_4.DisponibilidadeCelula());
+        //System.out.println("Numero de peças na celula: " + celula_4.DisponibilidadeCelula());
         
         return i;
     }
