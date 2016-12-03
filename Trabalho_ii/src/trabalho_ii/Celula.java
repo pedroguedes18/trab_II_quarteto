@@ -45,29 +45,25 @@ public class Celula {
     }
     
     public void DecrementarDisponibilidade(){
-        if((this.disponibilidade == 1)){
+        if(this.disponibilidade == 1){
             this.disponibilidade -- ;
+            System.out.println("Decrementei a disponibilidade: " + this.disponibilidade);
         }
         else{
-            //System.out.println("Erro a decrementar disponibilidade");
-            System.out.flush();
+            System.out.println("Erro a decrementar disponibilidade");
         }
     }
     
      public void IncrementarDisponibilidade(){
-        if((this.disponibilidade == 0)){
+        if(this.disponibilidade == 0){
+            System.out.println("A minha disponibilidade é: " + this.disponibilidade);
             this.disponibilidade ++ ;
-            //System.out.println("Incrementei a disponibilidade");
-            System.out.flush();
+            System.out.println("Incrementei a disponibilidade: " + this.disponibilidade);
         }
         else{
-            //System.out.println(this.disponibilidade);
-            //System.out.println("Erro a incrementar disponibilidade");
-            System.out.flush();
+            System.out.println(this.disponibilidade);
+            System.out.println("Erro a incrementar disponibilidade");
         }
     }
  
 }
-
-
-

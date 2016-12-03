@@ -36,6 +36,7 @@ public class Gestor_Producao implements Runnable {
     private int num_serie_PM2 = 0;
     private int estado = 0;
     private int aux_estado = 0;
+    private int n_exec = 0;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
     
@@ -230,6 +231,11 @@ public class Gestor_Producao implements Runnable {
                         
                             while (sensorAT2 != 1 || num_serie_AT2 != num_serie)
                             {
+                                try {       
+                                    Thread.sleep(25);
+                                } catch (InterruptedException ex) {
+                                         Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                                 //fica aqui à espera e vai atualizando as variaveis
                                 System.out.flush();                            
                                 sensorAT2 = ModBus.readPLC(0, 0);           // readPLC(numRegisto,0)
@@ -452,7 +458,7 @@ public class Gestor_Producao implements Runnable {
                                         {
                                             //System.out.println("quantidade = 0");
                                             remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
-
+                                            n_exec = n_exec - 1;
                                         }
                                         
                                         else if(quant > 0)
@@ -479,8 +485,10 @@ public class Gestor_Producao implements Runnable {
                                                 
                                                 //System.out.println("celula > 0");
                                                 
-                                                if (numero_ordem.indexOf(n_ordem) == -1)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                if (numero_ordem.indexOf(n_ordem) == -1 && n_exec < 2)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
+                                                    n_exec = n_exec + 1;
+                                                    System.out.println("Numero execuções: "+n_exec);
                                                     numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
                                                         
                                                     //int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
