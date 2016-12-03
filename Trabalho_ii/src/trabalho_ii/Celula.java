@@ -18,7 +18,7 @@ public class Celula {
     
     public Celula (int num_celula){             //método construct
         this.id_celula = num_celula;
-        this.disponibilidade = 2;
+        this.disponibilidade = 1;
     }
     
     public int DisponibilidadeCelula (){
@@ -32,8 +32,8 @@ public class Celula {
     
     public void TornarDisponivel(){
         
-        if(this.disponibilidade < 2){
-            this.disponibilidade = 2;
+        if(this.disponibilidade < 1){
+            this.disponibilidade = 1;
         }
     }
     
@@ -45,7 +45,7 @@ public class Celula {
     }
     
     public void DecrementarDisponibilidade(){
-        if((this.disponibilidade == 2) || (this.disponibilidade == 1)){
+        if((this.disponibilidade == 1)){
             this.disponibilidade -- ;
         }
         else{
@@ -55,7 +55,7 @@ public class Celula {
     }
     
      public void IncrementarDisponibilidade(){
-        if((this.disponibilidade == 0) || (this.disponibilidade == 1)){
+        if((this.disponibilidade == 0)){
             this.disponibilidade ++ ;
             //System.out.println("Incrementei a disponibilidade");
             System.out.flush();
