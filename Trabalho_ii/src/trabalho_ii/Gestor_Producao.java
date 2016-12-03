@@ -37,6 +37,7 @@ public class Gestor_Producao implements Runnable {
     private int estado = 0;
     private int aux_estado = 0;
     private int n_exec = 0;
+    private int aux;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
     
@@ -178,11 +179,11 @@ public class Gestor_Producao implements Runnable {
         
         //synchronized (this)
         //{
-        ReentrantLock lock = new ReentrantLock();
+        
 
        
-        lock.lock();
-        try {
+        //lock.lock();
+        //try {
             //System.out.println("vai enviar para o PLC\n");
             ModBus.writePLC(8, numero_serie);
             //System.out.println("já enviou 1\n");
@@ -190,12 +191,17 @@ public class Gestor_Producao implements Runnable {
             ModBus.writePLC(1, peca_origem);
             //System.out.println("já enviou 2\n");
             //System.out.flush();
-        } finally 
-            {
-                lock.unlock();
-            }
+        //} finally 
+            //{
+                //lock.unlock();
+            //}
     
         System.out.println("Escreveu o que tinha de escrever\n");
+        try {       
+                                    Thread.sleep(10);
+                                } catch (InterruptedException ex) {
+                                         Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                                }
     }
     
     public void remove_pedido_pendente(int pos)
@@ -384,7 +390,7 @@ public class Gestor_Producao implements Runnable {
                         while(true)
                         {
                             try {       
-                                    Thread.sleep(25);
+                                    Thread.sleep(40);
                                 } catch (InterruptedException ex) {
                                          Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
                                 }
@@ -434,7 +440,7 @@ public class Gestor_Producao implements Runnable {
                 
                 for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
-                         
+                    aux = 0;     
                     Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();        // vai buscar a instancia da Classe Escolha_caminho      
                     
                     switch (vetor_pedidos_pendentes[i].substring(0, 1))                     // primeiro vê que tipo de instrução e separa os parametros
@@ -458,7 +464,7 @@ public class Gestor_Producao implements Runnable {
                                         {
                                             //System.out.println("quantidade = 0");
                                             remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
-                                            n_exec = n_exec - 1;
+                                            //n_exec = n_exec - 1;
                                         }
                                         
                                         else if(quant > 0)
@@ -481,14 +487,20 @@ public class Gestor_Producao implements Runnable {
 
                                             if ( celula > 0)                    // quer dizer que existe uma célula disponivel
                                             {
+                                             //ReentrantLock lock = new ReentrantLock();
+                                             //lock.lock();
+                                             //try {
                                                 // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
                                                 
-                                                //System.out.println("celula > 0");
+                                                aux = 1;    // significa que meteu/vai meter uma peça
+                                                //System.out.println("celula > 0: " + celula);
+                                                //System.out.println("numero_ordem: " + n_ordem);
+                                                //System.out.println("GP: numero_ordem_index: "+ numero_ordem.indexOf(n_ordem));
                                                 
-                                                if (numero_ordem.indexOf(n_ordem) == -1 && n_exec < 2)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                if (numero_ordem.indexOf(n_ordem) == -1)// && n_exec < 2)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
-                                                    n_exec = n_exec + 1;
-                                                    System.out.println("Numero execuções: "+n_exec);
+                                                    //n_exec = n_exec + 1;
+                                                    //System.out.println("Numero execuções: "+n_exec);
                                                     numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
                                                         
                                                     //int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
@@ -529,13 +541,15 @@ public class Gestor_Producao implements Runnable {
                                                     {
                                                         thread_espera_peca("T",n_ordem, numero_serie);
                                                     }
+                                                    
+                                                    //i--;
                                                 }
                                             
                                                 else if (numero_ordem.indexOf(n_ordem) > -1)             // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
-                                                    //System.out.println("o numero de ordem já se encontra no vetor");
+                                                    //System.out.println("GP: numero de ordem já se encontra a ser executado");
 
                                                     quant = quant - 1;
 
@@ -547,7 +561,7 @@ public class Gestor_Producao implements Runnable {
 
                                                         quantidade = zero.concat(quantidade);
                                                     }
-                                                    
+                                                    //System.out.println("antes de atualizar vetor de pedidos pendentes");
                                                     String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
 
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
@@ -562,8 +576,14 @@ public class Gestor_Producao implements Runnable {
                                                     {
                                                         thread_espera_peca("T",n_ordem, numero_serie);
                                                     }
-                                                
+                                                    
+                                                    
+                                                    //i--;
                                                 }
+                                              //} finally 
+                                                //{
+                                                  //  lock.unlock();
+                                                //}
                                             }
                                         }
                                             
@@ -971,6 +991,10 @@ public class Gestor_Producao implements Runnable {
                                                     
                                             }
                                         }
+                    }
+                    if (aux == 1)
+                    {
+                        break;  //sai fora do ciclo for para fazer reset
                     }
                 }
             }

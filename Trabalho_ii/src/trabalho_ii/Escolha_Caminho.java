@@ -495,6 +495,144 @@ public class Escolha_Caminho implements Runnable {
                         break;        
             }
         }
+        else if (peça_origem == 3){
+            
+            switch (peça_final){
+                //P3-P4
+                case 4: d1=celula_1.DisponibilidadeCelula();
+                        d2=celula_2.DisponibilidadeCelula();
+                        d3=celula_3.DisponibilidadeCelula();
+                        d4=celula_4.DisponibilidadeCelula();
+                        
+                        if(d4 == 1 && this.auxiliar == 1){                                    //Assume-se numero máximo de 2 peças numa célula 
+                            i=4;
+                            celula_4.DecrementarDisponibilidade();
+                        }
+                        else if(d3 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=3;
+                            celula_3.DecrementarDisponibilidade();
+                        }
+                        else if(d2 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=2;
+                            celula_2.DecrementarDisponibilidade();
+                        }
+                        else if(d1 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=1;
+                            celula_1.DecrementarDisponibilidade();
+                        }
+                        
+                        else i=0;
+                        
+                        if (i > 0){
+                            modbus.writePLC(2,i);     //Envia para o PLC celula
+                            modbus.writePLC(9,peça_origem);     //Envia peca original
+                            modbus.writePLC(3,4);     //Envia para o PLC pt1
+                            modbus.writePLC(4,0);     //Envia para o PLC pt2
+                            modbus.writePLC(5,0);     //Envia para o PLC pt3
+                            modbus.writePLC(6,0);     //Envia para o PLC pt4
+                            modbus.writePLC(7,0);     //Envia para o PLC pt5          
+                        }
+                       
+                        break;
+                        
+                //P3-P4-P5
+                case 5: d2=celula_2.DisponibilidadeCelula();
+                        d4=celula_4.DisponibilidadeCelula();
+                        if(d4 == 1 && this.auxiliar == 1){                                    //Assume-se numero máximo de 2 peças numa célula 
+                            i=4;
+                            celula_4.DecrementarDisponibilidade();
+                        }
+                        else if(d2 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=2;
+                            celula_2.DecrementarDisponibilidade();
+                        }
+                        else i=0;
+                        
+                        if (i > 0){
+                            modbus.writePLC(2,i);     //Envia para o PLC celula
+                            modbus.writePLC(9,peça_origem);     //Envia peca original
+                            modbus.writePLC(3,4);     //Envia para o PLC pt1
+                            modbus.writePLC(4,5);     //Envia para o PLC pt2
+                            modbus.writePLC(5,0);     //Envia para o PLC pt3
+                            modbus.writePLC(6,0);     //Envia para o PLC pt4
+                            modbus.writePLC(7,0);     //Envia para o PLC pt5          
+                        }
+                        
+                        break;  
+                
+                //P3-P4-P6
+                case 6: d1=celula_1.DisponibilidadeCelula();
+                        d3=celula_3.DisponibilidadeCelula();
+                        if(d3 == 1 && this.auxiliar == 1){                                    //Assume-se numero máximo de 2 peças numa célula 
+                            i=3;
+                            celula_3.DecrementarDisponibilidade();
+                        }
+                        else if(d1 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=1;
+                            celula_1.DecrementarDisponibilidade();
+                        }
+                        else i=0;
+                        
+                        if (i > 0){
+                            modbus.writePLC(2,i);     //Envia para o PLC celula
+                            modbus.writePLC(9,peça_origem);     //Envia peca original
+                            modbus.writePLC(3,4);     //Envia para o PLC pt1
+                            modbus.writePLC(4,6);     //Envia para o PLC pt2
+                            modbus.writePLC(5,0);     //Envia para o PLC pt3
+                            modbus.writePLC(6,0);     //Envia para o PLC pt4
+                            modbus.writePLC(7,0);     //Envia para o PLC pt5          
+                        }
+                        
+                        break;        
+                        
+                //(P3-P4-P5-P7) OU (P3-P4-P6-P7)
+                case 7: d1=celula_1.DisponibilidadeCelula();
+                        d2=celula_2.DisponibilidadeCelula();
+                        d3=celula_3.DisponibilidadeCelula();
+                        d4=celula_4.DisponibilidadeCelula();
+                        
+                        if(d4 == 1 && this.auxiliar == 1){                                    //Assume-se numero máximo de 2 peças numa célula 
+                            i=4;
+                            celula_4.DecrementarDisponibilidade();
+                        }
+                        else if(d3 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=3;
+                            celula_3.DecrementarDisponibilidade();
+                        }
+                        else if(d2 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=2;
+                            celula_2.DecrementarDisponibilidade();
+                        }
+                        else if(d1 == 1 && this.auxiliar == 1 && ultima_peça > 1){
+                            i=1;
+                            celula_1.DecrementarDisponibilidade();
+                        }
+                        
+                        else i=0;
+                        
+                        if (i == 2 || i == 4){
+                            modbus.writePLC(2,i);     //Envia para o PLC celula
+                            modbus.writePLC(9,peça_origem);     //Envia peca original
+                            modbus.writePLC(3,4);     //Envia para o PLC pt1
+                            modbus.writePLC(4,5);     //Envia para o PLC pt2
+                            modbus.writePLC(5,7);     //Envia para o PLC pt3
+                            modbus.writePLC(6,0);     //Envia para o PLC pt4
+                            modbus.writePLC(7,0);     //Envia para o PLC pt5          
+                        }
+                        else if (i == 1 || i == 3){
+                            modbus.writePLC(2,i);     //Envia para o PLC celula
+                            modbus.writePLC(9,peça_origem);     //Envia peca original
+                            modbus.writePLC(3,4);     //Envia para o PLC pt1
+                            modbus.writePLC(4,6);     //Envia para o PLC pt2
+                            modbus.writePLC(5,7);     //Envia para o PLC pt3
+                            modbus.writePLC(6,0);     //Envia para o PLC pt4
+                            modbus.writePLC(7,0);     //Envia para o PLC pt5 
+                        }
+                        
+                        break;         
+            }        
+            
+        }
         
         else if (peça_origem == 4){
             
@@ -693,10 +831,12 @@ public class Escolha_Caminho implements Runnable {
                     //{
                         if(ModBus.readPLC(5,0) == 1){                   //Célula Série 1
                         this.auxiliar = 0;
+                        System.out.println("Célula 2: Vou incrementar agora");
                         while(modbus.readPLC(5,0) == 1){
                             celula_2.IncrementarDisponibilidade();
                         }
                         this.auxiliar = 1;
+                        System.out.println("Célula 2: Já incrementei, vou sair do IF \n");
                         //System.out.println("Incrementei a disponibilidade da célula 2");
                         }
                     //}
@@ -705,10 +845,12 @@ public class Escolha_Caminho implements Runnable {
                     //{
                         if(modbus.readPLC(6,0) == 1){                   //Célula Série 2
                         this.auxiliar = 0;
+                        System.out.println("Célula 4: Vou incrementar agora");
                         while(modbus.readPLC(6,0) == 1){
                             celula_4.IncrementarDisponibilidade();
                         }
                         this.auxiliar = 1;
+                        System.out.println("Célula 4: Já incrementei, vou sair do IF \n");
                         //System.out.println("Incrementei a disponibilidade da célula 4");
                         }
                     //}
@@ -716,12 +858,13 @@ public class Escolha_Caminho implements Runnable {
                     //synchronized (this)
                     //{
                     if(modbus.readPLC(3,0) == 1){                   //Célula Paralelo 1
-                        System.out.println("Sou a célula 1");
                         this.auxiliar = 0;
+                        System.out.println("Célula 1: Vou incrementar agora");
                         while(modbus.readPLC(3,0) == 1){
                             celula_1.IncrementarDisponibilidade();
                         }
                         this.auxiliar = 1;
+                        System.out.println("Célula 1: Já incrementei, vou sair do IF \n");
                         //System.out.println("Incrementei a disponibilidade da célula 1");
                     }
                     //}
@@ -729,12 +872,13 @@ public class Escolha_Caminho implements Runnable {
                     //synchronizes (this)
                     //{
                     if(modbus.readPLC(4,0) == 1){                   //Célula Paralelo 2
-                        System.out.println("Sou a célula 3");
                         this.auxiliar = 0;
+                        System.out.println("Célula 3: Vou incrementar agora");
                         while(modbus.readPLC(4,0) == 1){
                             celula_3.IncrementarDisponibilidade();
                         }
                         this.auxiliar = 1;
+                        System.out.println("Célula 3: Já incrementei, vou sair do IF \n");
                         //System.out.println("Incrementei a disponibilidade da célula 3");
                     }
                     //}
