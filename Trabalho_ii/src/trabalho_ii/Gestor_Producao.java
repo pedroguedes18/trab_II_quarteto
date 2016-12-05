@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -130,14 +131,14 @@ public class Gestor_Producao implements Runnable {
                                 
             Date data_inicio = new Date();
         
-            String hourDate_inicio = dateFormat.format(data_inicio);                            // devolve a hora e a data que o pedido comecou a sua execucao
+            String hourDate_inicio = dateFormat.format(data_inicio);            // devolve a hora e a data que o pedido comecou a sua execucao
             
-            numero_ordem_pendentes.add(n_ord);
-            
+            numero_ordem_pendentes.add(n_ord);                                  //fica guardado o numero de ordem de um pedido; associado a ele estão as respectivas datas
+                                                                                // deste modo quando o é removido do vetor de pedidos pendentes, tenho sempre acesso ao número de ordem
             int n_ord_int = numero_ordem_pendentes.indexOf(n_ord);
             
-            horaData_entrada_pedidos_pendentes.add(n_ord_int,hourDate_inicio);                  // na posição igual ao seu numero de ordem associa-lhe a data do vetor de pedidos pendentes                            
-            horaData_init_pedidos_pendentes.add(n_ord_int,"0");                                 // tenho de garantir que são inicializados 
+            horaData_entrada_pedidos_pendentes.add(n_ord_int,hourDate_inicio);  // na posição igual ao seu numero de ordem associa-lhe a data do vetor de pedidos pendentes                            
+            horaData_init_pedidos_pendentes.add(n_ord_int,"0");                 // tenho de garantir que são inicializados 
             horaData_final_pedidos_pendentes.add(n_ord_int,"0");
             
         }
@@ -168,7 +169,7 @@ public class Gestor_Producao implements Runnable {
         }
     }
     
-    public void escreve_PLC(int peca_origem)
+    public void escreve_PLC(int peca_origem, int peca_final,int quantidade)
     {
         System.out.println("entrou no ciclo escrever");
         aux_estado = 1;
@@ -177,31 +178,196 @@ public class Gestor_Producao implements Runnable {
         
         numero_serie = numero_serie +1;
         
-        //synchronized (this)
-        //{
-        
-
+        ReentrantLock lock = new ReentrantLock();
        
-        //lock.lock();
-        //try {
-            //System.out.println("vai enviar para o PLC\n");
+        lock.lock();
+        try { 
             ModBus.writePLC(8, numero_serie);
-            //System.out.println("já enviou 1\n");
-            //System.out.flush();
+
             ModBus.writePLC(1, peca_origem);
-            //System.out.println("já enviou 2\n");
-            //System.out.flush();
-        //} finally 
-            //{
-                //lock.unlock();
-            //}
+        }
+        finally 
+            {
+                lock.unlock();
+            }
     
         System.out.println("Escreveu o que tinha de escrever\n");
         try {       
-                                    Thread.sleep(10);
-                                } catch (InterruptedException ex) {
-                                         Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
-                                }
+              Thread.sleep(10);
+            } catch (InterruptedException ex) 
+                {
+                    Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                }
+        
+        ModBus.writePLC(1, 0);
+        
+        //-------------------------------------- PARA VOLTAR A ESCREVER CASO NAO ESCREVA-------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        Date tempo = new Date();
+        String dataFormatada = sdf.format(tempo);
+        
+        String segundos = dataFormatada.substring(6, 8);
+        
+        int seg = Integer.parseInt(segundos);
+        int seg2 = 0;
+        int dif = 0;
+        //System.out.println("segundos_1 = " +seg);
+        
+        while(estado == 1)  // significa que ainda esta a retirar a peca, pois quando retira vai para o estado 2
+        {
+            System.out.flush();
+            tempo = new Date();
+            dataFormatada = sdf.format(tempo);
+            String segundos2 = dataFormatada.substring(6, 8);
+            seg2 = Integer.parseInt(segundos2);
+            dif= seg2-seg;
+            
+            System.out.flush();
+            
+            if(dif > 10)    // demorou mais de 10s a tirar peça, volta a tirar
+            {
+                System.out.println("já passou mais de 10 segundos e não mandou nada");
+                
+                Escolha_Caminho E_C = Escolha_Caminho.getInstance();
+                
+                switch (celula)
+                {
+                    case 1:
+                        E_C.celula_1.IncrementarDisponibilidade();
+                        break;
+                    case 2:
+                        E_C.celula_2.IncrementarDisponibilidade();
+                        break;
+                    case 3:
+                        E_C.celula_3.IncrementarDisponibilidade();
+                        break;
+                    case 4:
+                        E_C.celula_4.IncrementarDisponibilidade();
+                }
+                
+                celula = E_C.Associar_Celulas_Transformaçao(peca_origem, peca_final, quantidade);
+                
+                lock.lock();
+                try { 
+                        ModBus.writePLC(8, numero_serie);
+
+                        ModBus.writePLC(1, peca_origem);
+                    }
+                finally 
+                {
+                    lock.unlock();
+                }
+    
+                System.out.println("Voltou a escrever o que tinha de escrever\n");
+                try {       
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) 
+                        {
+                        Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+        
+                ModBus.writePLC(1, 0);
+                
+                seg = seg2;
+            }
+            
+        }
+        //-------------------------------------- PARA VOLTAR A ESCREVER CASO NAO ESCREVA-------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        
+    }
+    
+    public void escreve_PLC_montagem_descarga(int peca)
+    {
+        System.out.println("entrou no ciclo escrever");
+        aux_estado = 1;
+        
+        numero_serie = numero_serie +1;
+        
+        ReentrantLock lock = new ReentrantLock();
+       
+        lock.lock();
+        try { 
+            ModBus.writePLC(8, numero_serie);
+
+            ModBus.writePLC(1, peca);
+        }
+        finally 
+            {
+                lock.unlock();
+            }
+    
+        System.out.println("Escreveu o que tinha de escrever\n");
+        try {       
+              Thread.sleep(10);
+            } catch (InterruptedException ex) 
+                {
+                    Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                }
+        
+        ModBus.writePLC(1, 0);
+        
+        //-------------------------------------- PARA VOLTAR A ESCREVER CASO NAO ESCREVA-------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        Date tempo = new Date();
+        String dataFormatada = sdf.format(tempo);
+        
+        String segundos = dataFormatada.substring(6, 8);
+        
+        int seg = Integer.parseInt(segundos);
+        int seg2 = 0;
+        int dif = 0;
+        //System.out.println("segundos_1 = " +seg);
+        
+        while(estado == 1)  // significa que ainda esta a retirar a peca, pois quando retira vai para o estado 2
+        {
+            System.out.flush();
+            tempo = new Date();
+            dataFormatada = sdf.format(tempo);
+            String segundos2 = dataFormatada.substring(6, 8);
+            seg2 = Integer.parseInt(segundos2);
+            dif= seg2-seg;
+            
+            System.out.flush();
+            
+            if(dif > 10)    // demorou mais de 10s a tirar peça, volta a tirar
+            {
+                System.out.println("já passou mais de 10 segundos e não mandou nada");
+                
+                //Escolha_Caminho E_C = Escolha_Caminho.getInstance();
+                
+                //E_C.celula_5.IncrementarDisponibilidade();
+                
+                
+                //celula = E_C.Associar_Celulas_Montagem();
+                
+                lock.lock();
+                try { 
+                        ModBus.writePLC(8, numero_serie);
+
+                        ModBus.writePLC(1, peca);
+                    }
+                finally 
+                {
+                    lock.unlock();
+                }
+    
+                System.out.println("Voltou a escrever o que tinha de escrever\n");
+                try {       
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) 
+                        {
+                        Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+        
+                ModBus.writePLC(1, 0);
+                
+                seg = seg2;
+            }
+            
+        }
     }
     
     public void remove_pedido_pendente(int pos)
@@ -272,14 +438,14 @@ public class Gestor_Producao implements Runnable {
                             System.out.println("numero serie suposto" +num_serie);
                         
                             sensorCT3 = ModBus.readPLC(8, 0);                // readPLC(numRegisto,0)
-                            num_serie_CT3 = ModBus.readPLC(11, 0);            // readPLC(numRegisto,0) 
+                            num_serie_CT3 = ModBus.readPLC(13, 0);            // readPLC(numRegisto,0) 
                         
                             while (sensorCT3 != 1 || num_serie_CT3 != num_serie)
                             {
                                 //fica aqui à espera e vai atualizando as variaveis
                                 System.out.flush();                            
                                 sensorCT3 = ModBus.readPLC(8, 0);           // readPLC(numRegisto,0)
-                                num_serie_CT3 = ModBus.readPLC(11, 0);       // readPLC(numRegisto,0)
+                                num_serie_CT3 = ModBus.readPLC(13, 0);       // readPLC(numRegisto,0)
                             }
                        
                             System.out.println("sensor_lido: " + sensorCT3);
@@ -308,14 +474,14 @@ public class Gestor_Producao implements Runnable {
                             // tenho de saber a que pusher tenho de ler, se não vou estar a ler dos dois desnecessáriamente
                             
                             sensorPM1 = ModBus.readPLC(9, 0);                // readPLC(numRegisto,0)
-                            num_serie_PM1 = ModBus.readPLC(12, 0);            // readPLC(numRegisto,0) 
+                            num_serie_PM1 = ModBus.readPLC(15, 0);            // readPLC(numRegisto,0) 
                         
                             while (sensorPM1 != 1 || num_serie_PM1 != num_serie)
                             {
                                 //fica aqui à espera e vai atualizando as variaveis
                                 System.out.flush();                            
                                 sensorPM1 = ModBus.readPLC(9, 0);           // readPLC(numRegisto,0)
-                                num_serie_PM1 = ModBus.readPLC(12, 0);       // readPLC(numRegisto,0)
+                                num_serie_PM1 = ModBus.readPLC(15, 0);       // readPLC(numRegisto,0)
                             }
                        
                             System.out.println("sensor_lido: " + sensorAT2);
@@ -343,15 +509,15 @@ public class Gestor_Producao implements Runnable {
                         
                             // tenho de saber a que pusher tenho de ler, se não vou estar a ler dos dois desnecessáriamente
                             
-                            sensorPM2 = ModBus.readPLC(10, 0);                // readPLC(numRegisto,0)
-                            num_serie_PM2 = ModBus.readPLC(13, 0);            // readPLC(numRegisto,0) 
+                            sensorPM2 = ModBus.readPLC(11, 0);                // readPLC(numRegisto,0)
+                            num_serie_PM2 = ModBus.readPLC(16, 0);            // readPLC(numRegisto,0) 
                         
                             while (sensorPM2 != 1 || num_serie_PM2 != num_serie)
                             {
                                 //fica aqui à espera e vai atualizando as variaveis
                                 System.out.flush();                            
-                                sensorPM2 = ModBus.readPLC(10, 0);           // readPLC(numRegisto,0)
-                                num_serie_PM2 = ModBus.readPLC(13, 0);       // readPLC(numRegisto,0)
+                                sensorPM2 = ModBus.readPLC(11, 0);           // readPLC(numRegisto,0)
+                                num_serie_PM2 = ModBus.readPLC(16, 0);       // readPLC(numRegisto,0)
                             }
                        
                             System.out.println("sensor_lido: " + sensorAT2);
@@ -379,7 +545,7 @@ public class Gestor_Producao implements Runnable {
     }
 
     
-    public void maquina_estados()                                             //para testar se funciona deste modo
+    public void maquina_estados()                                               
     {
         new Thread()
                 {
@@ -390,7 +556,7 @@ public class Gestor_Producao implements Runnable {
                         while(true)
                         {
                             try {       
-                                    Thread.sleep(40);
+                                    Thread.sleep(25);
                                 } catch (InterruptedException ex) {
                                          Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
                                 }
@@ -462,50 +628,33 @@ public class Gestor_Producao implements Runnable {
                                                 
                                         if( quant == 0)
                                         {
-                                            //System.out.println("quantidade = 0");
+                                            
                                             remove_pedido_pendente(i);  // como é a primeira vez que vai ser executado, se a quantidade for zero não é um pedido válido logo removemos
-                                            //n_exec = n_exec - 1;
+                                           
                                         }
                                         
                                         else if(quant > 0)
                                         {
-                                            //System.out.println("quantidade maior que zero");
                                             while(estado != 0)
                                             {
-                                                // espero que o tapete esteja livre para poder voltar a tirar uma peça
                                                 System.out.flush();
-                                                //celula = 0;
                                             }
                                             
-                                            //System.out.println("passou o ciclo while do estado");
+                                            celula = escolha_caminho.Associar_Celulas_Transformaçao(peca_orig, peca_final, quant);
                                         
-                                            // já está livre o tapete do armazém
-                                        
-                                            celula = escolha_caminho.Associar_Celulas_Transformaçao(peca_orig, peca_final,quant);
-                                        
-                                            //System.out.println("celula: " +celula);
-
-                                            if ( celula > 0)                    // quer dizer que existe uma célula disponivel
+                                            
+                                            if ( celula > 0)                    // quer dizer que existe uma célula disponivel para executar o pedido
                                             {
-                                             //ReentrantLock lock = new ReentrantLock();
-                                             //lock.lock();
-                                             //try {
-                                                // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
-                                                
+                                            
                                                 aux = 1;    // significa que meteu/vai meter uma peça
-                                                //System.out.println("celula > 0: " + celula);
-                                                //System.out.println("numero_ordem: " + n_ordem);
-                                                //System.out.println("GP: numero_ordem_index: "+ numero_ordem.indexOf(n_ordem));
+                                               
                                                 
-                                                if (numero_ordem.indexOf(n_ordem) == -1)// && n_exec < 2)                                                // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
+                                                if (numero_ordem.indexOf(n_ordem) == -1)           // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
-                                                    //n_exec = n_exec + 1;
-                                                    //System.out.println("Numero execuções: "+n_exec);
-                                                    numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
-                                                        
-                                                    //int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
                                                     
-                                                    int n_ord_int = numero_ordem_pendentes.indexOf(n_ordem);                                      // vai buscar a posicao que guardou o nº ordem
+                                                    numero_ordem.add(n_ordem);                     // adiciona o numero de ordem a ser executado
+                                                     
+                                                    int n_ord_int = numero_ordem_pendentes.indexOf(n_ordem);     // vai buscar a posicao que guardou o nº ordem quando foi
                                                     
                                                     Date data_inicio = new Date();
         
@@ -533,24 +682,20 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                    //System.out.println("antes de escrever");
-                                                    escreve_PLC(peca_orig);
-                                                    ModBus.writePLC(1, 0); 
+                                                    
+                                                    escreve_PLC(peca_orig, peca_final, quant);
+                                                    //ModBus.writePLC(1, 0);      // para garantir que só tira uma peça
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
                                                         thread_espera_peca("T",n_ordem, numero_serie);
                                                     }
                                                     
-                                                    //i--;
                                                 }
                                             
                                                 else if (numero_ordem.indexOf(n_ordem) > -1)             // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                                 {
-                                                    // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
-                                                
-                                                    //System.out.println("GP: numero de ordem já se encontra a ser executado");
-
+                                                    
                                                     quant = quant - 1;
 
                                                     quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
@@ -561,29 +706,22 @@ public class Gestor_Producao implements Runnable {
 
                                                         quantidade = zero.concat(quantidade);
                                                     }
-                                                    //System.out.println("antes de atualizar vetor de pedidos pendentes");
+                                                    
                                                     String aux = this.vetor_pedidos_pendentes[i].substring(0, 6);               // seleciona na ordem apenas o texto que nao vai ser alterado
 
                                                     this.vetor_pedidos_pendentes[i] = aux.concat(quantidade);                   // actualiza a quantidade no vetor de pedidos pendentes
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                    //System.out.println("antes de escrever");
-                                                    escreve_PLC(peca_orig);
-                                                    ModBus.writePLC(1, 0); 
+                                                    
+                                                    escreve_PLC(peca_orig, peca_final, quant);
+                                                    //ModBus.writePLC(1, 0); 
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
                                                         thread_espera_peca("T",n_ordem, numero_serie);
                                                     }
-                                                    
-                                                    
-                                                    //i--;
                                                 }
-                                              //} finally 
-                                                //{
-                                                  //  lock.unlock();
-                                                //}
                                             }
                                         }
                                             
@@ -613,35 +751,28 @@ public class Gestor_Producao implements Runnable {
                                         
                                         else if(quant > 0)
                                         {
-                                            System.out.println("quantidade maior que zero");
+                                            
                                             while(estado != 0)
                                             {
-                                                // espero que o tapete esteja livre para poder voltar a tirar uma peça
+                                                
                                                 System.out.flush();
-                                                //celula = 0;
+                                                
                                             }
                                             
-                                            System.out.println("passou o ciclo while do estado");
-                                        
-                                            // já está livre o tapete do armazém
-                                        
-                                            celula = 5; //para ir para a montagem.. tenho de ver se está livre
+                                            celula = escolha_caminho.Associar_Celulas_Montagem(); //para ir para a montagem.. tenho de ver se está livre
                                             
-                                            System.out.println("celula: " +celula);
-                                        
                                         
                                             if ( celula > 0)                    // quer dizer que existe uma célula disponivel
                                             {
-                                                // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
-                                                
-                                                System.out.println("celula > 0");
+                                                System.out.println("Montagem: entrou celula > 0");
+                                                aux = 1;
                                                 
                                                 if (numero_ordem.indexOf(n_ordem) == -1)                                               // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
+                                                    System.out.println("Montagem: numero de ordem ainda não foi nenhuma vez executado");
+                                                    
                                                     numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
 
-                                                    //int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
-                                                    
                                                     int n_ord_int = numero_ordem_pendentes.indexOf(n_ordem);                                      // vai buscar a posicao que guardou o nº ordem
                                                     
                                                     Date data_inicio = new Date();
@@ -688,8 +819,8 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
                                                     //---------------------------------------------------------------------------------------------------------
                                                     
-                                                    escreve_PLC(peca_cima);            //manda a peça de baixo
-                                                    ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
+                                                    escreve_PLC_montagem_descarga(peca_cima);    //manda a peça de cima
+                                                    //ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
                                                     
                                                     
                                                     while(estado != 0)                  // só quando o tapete ficar novamente livre é que vai mandar a peça de cima
@@ -716,7 +847,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
                                                     //-------------------------------------------------------------------------------------------------------
                                                     
-                                                    escreve_PLC(peca_baixo);            //manda a peça de cima
+                                                    escreve_PLC_montagem_descarga(peca_baixo);            //manda a peça de cima
                                                     ModBus.writePLC(1, 0);
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
@@ -729,9 +860,7 @@ public class Gestor_Producao implements Runnable {
                                                 else if (numero_ordem.indexOf(n_ordem) > -1)               // quer dizer que já tem a hora de inicio guardada e entao só precisa de executar a função
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
-                                                
-                                                    System.out.println("o numero de ordem já se encontra no vetor");
-
+                                                    System.out.println("Montagem: numero de ordem já se encontra a ser executado.");
                                                     quant = quant - 1;
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
@@ -765,10 +894,10 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(5,peca_trans_3);     //Envia para o PLC pt3
                                                     ModBus.writePLC(6,peca_trans_4);     //Envia para o PLC pt4
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
-                                                    //--------------------------------------------------------------------------------------------------------
+                                                    //---------------------------------------------------------------------------------------------------------
                                                     
-                                                    escreve_PLC(peca_cima);            //manda a peça de baixo
-                                                    ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
+                                                    escreve_PLC_montagem_descarga(peca_cima);    //manda a peça de cima
+                                                    //ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
                                                     
                                                     
                                                     while(estado != 0)                  // só quando o tapete ficar novamente livre é que vai mandar a peça de cima
@@ -795,12 +924,12 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
                                                     //-------------------------------------------------------------------------------------------------------
                                                     
-                                                    escreve_PLC(peca_baixo);            //manda a peça de cima
+                                                    escreve_PLC_montagem_descarga(peca_baixo);            //manda a peça de cima
                                                     ModBus.writePLC(1, 0);
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
-                                                        thread_espera_peca("M", n_ordem, numero_serie);
+                                                        thread_espera_peca("M",n_ordem, numero_serie);
                                                     }
 
                                                 }
@@ -833,37 +962,24 @@ public class Gestor_Producao implements Runnable {
                                         
                                         else if(quant > 0)
                                         {
-                                            System.out.println("quantidade maior que zero");
+                                            //System.out.println("quantidade maior que zero");
                                             while(estado != 0)
                                             {
-                                                // espero que o tapete esteja livre para poder voltar a tirar uma peça
                                                 System.out.flush();
-                                                //celula = 0;
                                             }
                                             
-                                            System.out.println("passou o ciclo while do estado");
-                                        
-                                            // já está livre o tapete do armazém
-                                        
+                                            celula = escolha_caminho.Associar_Celulas_Descarga(local_descarga); //para ir para a montagem.. tenho de ver se está livre
                                             
-                                            // VAI TER DE VER SE O LOCAL DE DESCARGA ESTÁ LIVRE
-                                            celula = local_descarga; //para ir para a montagem.. tenho de ver se está livre
-                                            
-                                            System.out.println("celula: " +celula);
-                                        
                                         
                                             if ( celula > 0)                    // quer dizer que existe uma célula disponivel
                                             {
-                                                // AQUI DEVO PODER VER SE O NUMERO DE ORDEM JÁ ESTÁ NA LISTA DE NUMEROS DE ORDENS
+                                                aux = 1;
                                                 
-                                                System.out.println("celula > 0");
                                                 
                                                 if (numero_ordem.indexOf(n_ordem) == -1)                                               // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
                                                     numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
 
-                                                    //int pos_ordem = numero_ordem.indexOf(n_ordem);                                      // vai ver em que posicao adicionou para depois lhe poder atribuir as horas
-                                                    
                                                     int n_ord_int = numero_ordem_pendentes.indexOf(n_ordem);                                      // vai buscar a posicao que guardou o nº ordem
                                                     
                                                     Date data_inicio = new Date();
@@ -910,7 +1026,7 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
                                                     //---------------------------------------------------------------------------------------------------------
                                                     
-                                                    escreve_PLC(peca_descarga);         //manda a peça de baixo
+                                                    escreve_PLC_montagem_descarga(peca_descarga);         //manda a peça de baixo
                                                     ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
                                                    
                                                     
@@ -933,9 +1049,7 @@ public class Gestor_Producao implements Runnable {
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
-                                                    System.out.println("o numero de ordem já se encontra no vetor");
-
-                                                    quant = quant - 1;
+                                                   quant = quant - 1;
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
@@ -970,10 +1084,10 @@ public class Gestor_Producao implements Runnable {
                                                     ModBus.writePLC(7,peca_trans_5);     //Envia para o PLC pt5 
                                                     //---------------------------------------------------------------------------------------------------------
                                                     
-                                                    escreve_PLC(peca_descarga);         //manda a peça de baixo
+                                                    escreve_PLC_montagem_descarga(peca_descarga);         //manda a peça de baixo
                                                     ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
                                                    
-                                                    
+                                                   
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
                                                         if(local_descarga == 1)
@@ -992,7 +1106,7 @@ public class Gestor_Producao implements Runnable {
                                             }
                                         }
                     }
-                    if (aux == 1)
+                    if (aux == 1)           //significa que colocou uma ordem em execução logo volta a tras para ver se pode voltar a meter mais recentes.
                     {
                         break;  //sai fora do ciclo for para fazer reset
                     }

@@ -51,15 +51,18 @@ public class Celula {
             System.out.flush();
         }
         else{
+            System.out.flush();
             //System.out.println("Erro a decrementar disponibilidade");
         }
     }
     
      public void IncrementarDisponibilidade(){
         if(this.disponibilidade == 0){
-            System.out.println("A minha disponibilidade é: " + this.disponibilidade);
+            System.out.flush();
+            //System.out.println("A minha disponibilidade é: " + this.disponibilidade);
             this.disponibilidade ++ ;
-            System.out.println("Incrementei a disponibilidade: " + this.disponibilidade);
+            System.out.flush();
+            //System.out.println("Incrementei a disponibilidade: " + this.disponibilidade);
         }
         else{
             System.out.flush();

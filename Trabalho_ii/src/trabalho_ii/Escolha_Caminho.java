@@ -12,9 +12,13 @@ public class Escolha_Caminho implements Runnable {
     
     private static Escolha_Caminho instance;                                    // instância da classe Escolha_Caminho
     private int auxiliar;
+    private int auxiliarM;
+    private int auxiliarD;
     
     public Escolha_Caminho (){             //método construct
         this.auxiliar = 1;
+        this.auxiliarM = 1;
+        this.auxiliarD = 1;
     }
                                                 
     public static Escolha_Caminho getInstance()                                 // método para criar se ainda não foi criado uma instancia de Escolha_Caminho
@@ -34,7 +38,9 @@ public class Escolha_Caminho implements Runnable {
     Celula celula_2 = new Celula(2); //Célula Série 1
     Celula celula_3 = new Celula(3); //Célula Paralelo 2
     Celula celula_4 = new Celula(4); //Célula Série 2
-    
+    Celula celula_5 = new Celula(5); //Célula Montagem
+    Celula celula_6 = new Celula(6); //Local de Descarga 1
+    Celula celula_7 = new Celula(7); //Local de Descarga 2
     
     //TESTAR
     
@@ -813,8 +819,65 @@ public class Escolha_Caminho implements Runnable {
         
         return i;
     }
-
     
+    
+    public int Associar_Celulas_Montagem (){
+        int i = 0;
+        int d5 = 0;
+        
+        d5 = celula_5.DisponibilidadeCelula();
+        System.out.flush();
+        
+        if(d5 == 1 && this.auxiliarM == 1){
+            i = 5;
+            celula_5.DecrementarDisponibilidade();
+        }
+        else
+            i=0;
+        
+        if (i == 5){
+            modbus.writePLC(2,i);     //Envia para o PLC celula
+        }
+        
+        return i;
+    }
+    
+    
+    public int Associar_Celulas_Descarga (int local_descarga){
+        int i = 0;
+        int d6 = 0;
+        int d7 = 0;
+        
+        if(local_descarga == 1){
+            d6 = celula_6.DisponibilidadeCelula();
+            
+            if(d6 == 1 && this.auxiliarD == 1){
+                i = 6;
+                celula_6.DecrementarDisponibilidade();
+            }
+            else 
+                i = 0;
+        }
+        else if(local_descarga == 2){
+            d7 = celula_7.DisponibilidadeCelula();
+            
+            if(d7 == 1 && this.auxiliarD == 1){
+                i = 7;
+                celula_7.DecrementarDisponibilidade();
+            }
+            else
+                i = 0;
+        }
+        
+        if (i == 6){
+            modbus.writePLC(2,i);
+        }
+        else if (i == 7){
+            modbus.writePLC(2,i);
+        }
+        
+        return i;
+    }
 
     @Override
     public void run() {
@@ -837,7 +900,6 @@ public class Escolha_Caminho implements Runnable {
                         }
                         this.auxiliar = 1;
                         System.out.println("Célula 2: Já incrementei, vou sair do IF \n");
-                        //System.out.println("Incrementei a disponibilidade da célula 2");
                         }
                     //}
             
@@ -851,7 +913,6 @@ public class Escolha_Caminho implements Runnable {
                         }
                         this.auxiliar = 1;
                         System.out.println("Célula 4: Já incrementei, vou sair do IF \n");
-                        //System.out.println("Incrementei a disponibilidade da célula 4");
                         }
                     //}
                     
@@ -865,7 +926,6 @@ public class Escolha_Caminho implements Runnable {
                         }
                         this.auxiliar = 1;
                         System.out.println("Célula 1: Já incrementei, vou sair do IF \n");
-                        //System.out.println("Incrementei a disponibilidade da célula 1");
                     }
                     //}
                     
@@ -879,8 +939,46 @@ public class Escolha_Caminho implements Runnable {
                         }
                         this.auxiliar = 1;
                         System.out.println("Célula 3: Já incrementei, vou sair do IF \n");
-                        //System.out.println("Incrementei a disponibilidade da célula 3");
                     }
+                    //}
+                    
+                    //synchronized (this)
+                    //{
+                        if(ModBus.readPLC(10,0) == 1){                   //Célula Montagem
+                        this.auxiliarM = 0;
+                        System.out.println("Célula 5: Vou incrementar agora");
+                        while(modbus.readPLC(10,0) == 1){
+                            celula_5.IncrementarDisponibilidade();
+                        }
+                        this.auxiliarM = 1;
+                        System.out.println("Célula 5: Já incrementei, vou sair do IF \n");
+                        }
+                    //}
+                    
+                    //synchronized (this)
+                    //{
+                        if(ModBus.readPLC(12,0) == 1){                   //Célula Descarga 1
+                        this.auxiliarD = 0;
+                        System.out.println("Célula 6: Vou incrementar agora");
+                        while(modbus.readPLC(12,0) == 1){
+                            celula_6.IncrementarDisponibilidade();
+                        }
+                        this.auxiliarD = 1;
+                        System.out.println("Célula 6: Já incrementei, vou sair do IF \n");
+                        }
+                    //}
+                    
+                    //synchronized (this)
+                    //{
+                        if(ModBus.readPLC(14,0) == 1){                   //Célula Descarga 2
+                        this.auxiliarD = 0;
+                        System.out.println("Célula 7: Vou incrementar agora");
+                        while(modbus.readPLC(14,0) == 1){
+                            celula_7.IncrementarDisponibilidade();
+                        }
+                        this.auxiliarD = 1;
+                        System.out.println("Célula 7: Já incrementei, vou sair do IF \n");
+                        }
                     //}
         }
     }
