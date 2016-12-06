@@ -15,9 +15,10 @@ public class Gestor_Producao implements Runnable {
     
     private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
     private final int [] vetor_aux_ped_pendentes = new int [15];                // vetor auxiliar de pedidos pendes que indicam se o processo já entrou em execução alguma vez
-    private final String [] vetor_pedidos_execucao = new String [7];            // cria um vetor de pedidos execucao. Apenas tem sete pois sao o numero de celulas disponiveis.
+    private final int [] vetor_pedidos_execucao = new int [15];           // cria um vetor de pedidos execucao. É uma replica dos pedidos em execução na medida em que diz quantas pecas estao no sistema a ser processadas
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     
+    private final ArrayList<String> todos_pedidos = new ArrayList<> ();
     private final ArrayList<String> numero_ordem = new ArrayList<> ();
     private final ArrayList<String> numero_ordem_pendentes = new ArrayList<> ();
     private final ArrayList<String> horaData_init_pedidos_pendentes = new ArrayList<> ();       // assumi que tem ligacao directa ao vetor_pedidos_execucao
@@ -37,14 +38,41 @@ public class Gestor_Producao implements Runnable {
     private int num_serie_PM2 = 0;
     private int estado = 0;
     private int aux_estado = 0;
-    private int n_exec = 0;
     private int aux;
+    
+    private int[] Pusher_1 = new int [8];
+    private int[] Pusher_2 = new int [8];
+    private int[] maquina_c1_b = new int [3];   // pecas do tipo 2 4 e 7
+    private int[] maquina_c1_c = new int [3];   // pecas do tipo 3 6 7
+    private int[] maquina_c2_a = new int [3];   // pecas do tipo 1 3 5 
+    private int[] maquina_c2_b = new int [3];   //...
+    private int[] maquina_c3_b = new int [3];
+    private int[] maquina_c3_c = new int [3];
+    private int[] maquina_c4_a = new int [3];
+    private int[] maquina_c4_b = new int [3];
+    
+    private int tempo_maq_c1_b =0;
+    private int tempo_maq_c1_c =0;
+    private int tempo_maq_c2_a =0;
+    private int tempo_maq_c2_b =0;
+    private int tempo_maq_c3_b =0;
+    private int tempo_maq_c3_c =0;
+    private int tempo_maq_c4_a =0;
+    private int tempo_maq_c4_b =0;
+    private int maq_c1_b_total =0;
+    private int maq_c1_c_total =0;
+    private int maq_c2_a_total =0;
+    private int maq_c2_b_total =0;
+    private int maq_c3_b_total =0;
+    private int maq_c3_c_total =0;
+    private int maq_c4_a_total =0;
+    private int maq_c4_b_total =0;
     
     private static Gestor_Producao instance;                                    // instância que é da class Gestor_produção
     
     //private Gestor_Producao(){}                                               // ainda nao percebi para que é este método
     
-	
+    
     public static Gestor_Producao getInstance()                                 // método para criar se ainda não foi criado uma instancia do Gestor de Produção
     {
 	if(instance==null)
@@ -115,6 +143,7 @@ public class Gestor_Producao implements Runnable {
         {
             this.vetor_pedidos_pendentes[pos] = ordem;
             this.vetor_aux_ped_pendentes[pos] = 0;                              // 0 -> significa que ainda não foi executado nenhuma vez... 
+            this.todos_pedidos.add(ordem);                                      // fica com todos os pedidos iniciais
             
             System.out.println("----------------------------------------------------------------------------------\n"
                     + "-------------------------------------------------------------------------------------");
@@ -149,24 +178,63 @@ public class Gestor_Producao implements Runnable {
         }
     }
     
-    public int insere_vetor_pedidos_execucao(String pedido)
+    public void insere_vetor_pedidos_execucao(int pos, int celula)
     {
-        int pos = this.ver_se_vetor_cheio(this.vetor_pedidos_execucao);             // se tem espaço é aqui guardado a posicao disponivel;
         
-        if( pos > -1)
-        {
-            this.vetor_pedidos_execucao[pos] = pedido;
+            this.vetor_pedidos_execucao[pos]++;
             
-            System.out.println("Vetor de pedidos em execução: " + this.vetor_pedidos_execucao[pos]);
-            
-            return pos;
-        }
-        
-        else
-        {
-            System.out.println("O vetor está cheio. Não é possivel executar mais pedidos");
-            return pos;
-        }
+            new Thread()
+                {
+                    @Override
+                    public void run()
+                    {
+                        Escolha_Caminho EC = Escolha_Caminho.getInstance();
+                        
+                        switch (celula)
+                        {
+                            case 1:
+                                    while(EC.celula_1.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                        
+                                    vetor_pedidos_execucao[pos]--;
+                                    
+                                    break;
+                                    
+                            case 2:
+                                    while(EC.celula_2.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                        
+                                    vetor_pedidos_execucao[pos]--;
+                                    
+                                    break;
+                            
+                            case 3:
+                                    while(EC.celula_3.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                        
+                                    vetor_pedidos_execucao[pos]--;
+                                    
+                                    break;
+                            case 4:
+                                    while(EC.celula_4.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                        
+                                    vetor_pedidos_execucao[pos]--;
+                                    
+                                    break;
+                        }
+                        
+                    }
+                }.start();
+
     }
     
     public void escreve_PLC(int peca_origem, int peca_final,int quantidade)
@@ -192,14 +260,14 @@ public class Gestor_Producao implements Runnable {
             }
     
         System.out.println("Escreveu o que tinha de escrever\n");
-        try {       
+        /*try {       
               Thread.sleep(10);
             } catch (InterruptedException ex) 
                 {
                     Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                }*/
         
-        ModBus.writePLC(1, 0);
+        
         
         //-------------------------------------- PARA VOLTAR A ESCREVER CASO NAO ESCREVA-------------------------------
         //------------------------------------------------------------------------------------------------------------
@@ -217,6 +285,7 @@ public class Gestor_Producao implements Runnable {
         while(estado == 1)  // significa que ainda esta a retirar a peca, pois quando retira vai para o estado 2
         {
             System.out.flush();
+            /*System.out.flush();
             tempo = new Date();
             dataFormatada = sdf.format(tempo);
             String segundos2 = dataFormatada.substring(6, 8);
@@ -270,9 +339,10 @@ public class Gestor_Producao implements Runnable {
                 ModBus.writePLC(1, 0);
                 
                 seg = seg2;
-            }
+            }*/
             
         }
+        ModBus.writePLC(1, 0);
         //-------------------------------------- PARA VOLTAR A ESCREVER CASO NAO ESCREVA-------------------------------
         //------------------------------------------------------------------------------------------------------------
         
@@ -299,14 +369,14 @@ public class Gestor_Producao implements Runnable {
             }
     
         System.out.println("Escreveu o que tinha de escrever\n");
-        try {       
+        /*try {       
               Thread.sleep(10);
             } catch (InterruptedException ex) 
                 {
                     Logger.getLogger(Escolha_Caminho.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                }*/
         
-        ModBus.writePLC(1, 0);
+        
         
         //-------------------------------------- PARA VOLTAR A ESCREVER CASO NAO ESCREVA-------------------------------
         //------------------------------------------------------------------------------------------------------------
@@ -324,6 +394,7 @@ public class Gestor_Producao implements Runnable {
         while(estado == 1)  // significa que ainda esta a retirar a peca, pois quando retira vai para o estado 2
         {
             System.out.flush();
+            /*System.out.flush();
             tempo = new Date();
             dataFormatada = sdf.format(tempo);
             String segundos2 = dataFormatada.substring(6, 8);
@@ -365,9 +436,11 @@ public class Gestor_Producao implements Runnable {
                 ModBus.writePLC(1, 0);
                 
                 seg = seg2;
-            }
+            }*/
             
         }
+        
+        ModBus.writePLC(1, 0);  // quer dizer que já pos a peca
     }
     
     public void remove_pedido_pendente(int pos)
@@ -375,15 +448,109 @@ public class Gestor_Producao implements Runnable {
         int tamanho = this.vetor_pedidos_pendentes.length -1;
         
         this.vetor_pedidos_pendentes[pos] = null;
+        this.vetor_pedidos_execucao[pos] = 0;
         
         for(int i=pos; i < tamanho; i++)
         {
-            this.vetor_pedidos_pendentes[i] = this.vetor_pedidos_pendentes[i+1]; 
+            this.vetor_pedidos_pendentes[i] = this.vetor_pedidos_pendentes[i+1];
+            this.vetor_pedidos_execucao[i] = this.vetor_pedidos_execucao[i+1];
         }
         
         this.vetor_pedidos_pendentes[tamanho] = null;                           // asseguro que a ultima posicao fica com valor nulo
+        this.vetor_pedidos_execucao[tamanho] = 0;
         
     }
+    
+    public int atualiza_total_pecas_descarga(int Pusher)
+    {
+        int total = 0;
+        
+        switch (Pusher)
+        {
+            case 1:
+                    for(int z=0; z<8; z++)
+                    {
+                        total = total + Pusher_1[z];
+                    }
+                break;
+                
+            case 2:
+                    for(int z=0; z<8; z++)
+                    {
+                        total = total + Pusher_2[z];
+                    }
+                break;
+        }
+         
+        return total;
+    }
+    
+    public void adiciona_peca_descarga(int peca, int pusher)
+    {
+        switch (pusher)
+        {
+           case 1:
+                
+                Pusher_1[peca-1]++;
+                break;
+            
+           case 2:
+                Pusher_2[peca-1]++;    
+                break; 
+        }     
+    }
+    
+    public void atualiza_pecas_maquina()
+    {
+        for(int y=0; y<2; y++)
+           {
+               maquina_c1_b[y] = ModBus.readPLC(y+18, 0);
+               maquina_c1_c[y] = ModBus.readPLC(y+21, 0);
+               //------------------------------------
+               maquina_c2_a[y] = ModBus.readPLC(y+24, 0);
+               maquina_c2_b[y] = ModBus.readPLC(y+27, 0);
+               //------------------------------------
+               maquina_c3_b[y] = ModBus.readPLC(y+30, 0);
+               maquina_c3_c[y] = ModBus.readPLC(y+33, 0);
+               //------------------------------------
+               maquina_c4_a[y] = ModBus.readPLC(y+36, 0);
+               maquina_c4_b[y] = ModBus.readPLC(y+39, 0); 
+           }
+        
+        maq_c1_b_total = maquina_c1_b[0] + maquina_c1_b[1] + maquina_c1_b[2];
+        maq_c1_c_total = maquina_c1_c[0] + maquina_c1_c[1] + maquina_c1_c[2];
+        //------------------------------------------------------------------
+        maq_c2_a_total = maquina_c2_a[0] + maquina_c2_a[1] + maquina_c2_a[2];
+        maq_c2_b_total = maquina_c2_b[0] + maquina_c2_b[1] + maquina_c2_b[2];
+        //------------------------------------------------------------------
+        maq_c3_b_total = maquina_c3_b[0] + maquina_c3_b[1] + maquina_c3_b[2];
+        maq_c3_c_total = maquina_c3_c[0] + maquina_c3_c[1] + maquina_c3_c[2];
+        //------------------------------------------------------------------
+        maq_c4_a_total = maquina_c4_a[0] + maquina_c4_a[1] + maquina_c4_a[2];
+        maq_c4_b_total = maquina_c4_b[0] + maquina_c4_b[1] + maquina_c4_b[2];
+    }
+    
+    public void atualiza_tempo_operacao_maquina()    // Atualiza todos os tempos que cada maquina esteve a trabalhar em minutos
+    {
+        // Atualiza pecas nas maquinas
+            
+           atualiza_pecas_maquina();
+        
+        // calcular o tempo
+           
+           tempo_maq_c1_b =(25*maquina_c1_b[0] + 25*maquina_c1_b[1]+20*maquina_c1_b[2]);
+           tempo_maq_c1_c =(25*maquina_c1_c[0] + 10*maquina_c1_c[1]+30*maquina_c1_c[2]);
+           //-----------------------------------------------------------------------------
+           tempo_maq_c2_a =(20*maquina_c2_a[0] + 25*maquina_c2_a[1]+25*maquina_c2_a[2]);
+           tempo_maq_c2_b =(25*maquina_c2_b[0] + 25*maquina_c2_b[1]+20*maquina_c2_b[2]);
+           //-----------------------------------------------------------------------------
+           tempo_maq_c3_b =(25*maquina_c3_b[0] + 25*maquina_c3_b[1]+20*maquina_c3_b[2]);
+           tempo_maq_c3_c =(25*maquina_c3_c[0] + 10*maquina_c3_c[1]+30*maquina_c3_c[2]);
+           //-----------------------------------------------------------------------------
+           tempo_maq_c4_a =(20*maquina_c4_a[0] + 25*maquina_c4_a[1]+25*maquina_c4_a[2]);
+           tempo_maq_c4_b =(25*maquina_c4_b[0] + 25*maquina_c4_b[1]+20*maquina_c4_b[2]);
+    }
+    
     
     public void thread_espera_peca(String tipo_ordem,String ordem_numero, int num_serie)                                             //para testar se funciona deste modo
     {
@@ -431,6 +598,36 @@ public class Gestor_Producao implements Runnable {
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                            
+                            atualiza_pecas_maquina();
+                            atualiza_tempo_operacao_maquina();
+                            
+                            System.out.println("------------------------ESTATISTICAS-----------------------------------------");
+                            System.out.println("--------------------------MAQUINAS-------------------------------------------");
+                            System.out.println("            |  Maquina-a C2  |  Maquina-a C4");
+                            System.out.println("Total_pecas |  "+maq_c2_a_total+"          |       "+maq_c4_a_total);
+                            System.out.println("Peca-P1     |  "+maquina_c2_a[0]+"          |       "+maquina_c4_a[0]);
+                            System.out.println("Peca-P3     |  "+maquina_c2_a[1]+"          |       "+maquina_c4_a[1]);
+                            System.out.println("Peca-P5     |  "+maquina_c2_a[2]+"          |       "+maquina_c4_a[2]);
+                            System.out.println("Tempo_Oper. |  "+tempo_maq_c2_a+"seg       |       "+tempo_maq_c4_a+"seg");
+                            System.out.println("_____________________________________________________________________________");
+                            System.out.println("            |Maquina-b C1  |  Maquina-b C2  |  Maquina-b C3  |  Maquina-b C4");
+                            System.out.println("Total_pecas |  "+maq_c1_b_total+"          |       "+maq_c2_b_total+"          |       "+maq_c3_b_total+"          |       "+maq_c4_b_total);
+                            System.out.println("Peca-P2     |  "+maquina_c1_b[0]+"          |       "+maquina_c2_b[0]+"          |       "+maquina_c3_b[0]+"          |       "+maquina_c4_b[0]);
+                            System.out.println("Peca-P4     |  "+maquina_c1_b[1]+"          |       "+maquina_c2_b[1]+"          |       "+maquina_c3_b[1]+"          |       "+maquina_c4_b[1]);
+                            System.out.println("Peca-P7     |  "+maquina_c1_b[2]+"          |       "+maquina_c2_b[2]+"          |       "+maquina_c3_b[2]+"          |       "+maquina_c4_b[2]);
+                            System.out.println("Tempo_Oper. |  "+tempo_maq_c1_b+"seg       |       "+tempo_maq_c2_b+"seg       |       "+tempo_maq_c3_b+"seg       |       "+tempo_maq_c4_b+"seg");
+                            System.out.println("_____________________________________________________________________________");
+                            System.out.println("            |Maquina-c C1  |  Maquina-c C3");
+                            System.out.println("Total_pecas |  "+maq_c1_c_total+"          |       "+maq_c3_c_total);
+                            System.out.println("Peca-P3     |  "+maquina_c1_c[0]+"          |       "+maquina_c3_c[0]);
+                            System.out.println("Peca-P6     |  "+maquina_c1_c[1]+"          |       "+maquina_c3_c[1]);
+                            System.out.println("Peca-P7     |  "+maquina_c1_c[2]+"          |       "+maquina_c3_c[2]);
+                            System.out.println("Tempo_Oper. |  "+tempo_maq_c1_c+"seg       |       "+tempo_maq_c3_c+"seg");
+                            
+                            System.out.println("-----------------------------------------------------------------------------");
+                            System.out.println("-----------------------------------------------------------------------------");
+                            
                         }
                         
                         else if (tipo_ordem.equals("M"))
@@ -473,18 +670,18 @@ public class Gestor_Producao implements Runnable {
                         
                             // tenho de saber a que pusher tenho de ler, se não vou estar a ler dos dois desnecessáriamente
                             
-                            sensorPM1 = ModBus.readPLC(9, 0);                // readPLC(numRegisto,0)
+                            //sensorPM1 = ModBus.readPLC(9, 0);                // readPLC(numRegisto,0)
                             num_serie_PM1 = ModBus.readPLC(15, 0);            // readPLC(numRegisto,0) 
                         
-                            while (sensorPM1 != 1 || num_serie_PM1 != num_serie)
+                            while (/*sensorPM1 != 1 ||*/ num_serie_PM1 != num_serie)
                             {
                                 //fica aqui à espera e vai atualizando as variaveis
                                 System.out.flush();                            
-                                sensorPM1 = ModBus.readPLC(9, 0);           // readPLC(numRegisto,0)
+                                //sensorPM1 = ModBus.readPLC(9, 0);           // readPLC(numRegisto,0)
                                 num_serie_PM1 = ModBus.readPLC(15, 0);       // readPLC(numRegisto,0)
                             }
                        
-                            System.out.println("sensor_lido: " + sensorAT2);
+                            //System.out.println("sensor_lido: " + sensorAT2);
                             System.out.println("num_serie_lido: "+num_serie_AT2);
                        
                             // vai atulizar hora de fim
@@ -501,6 +698,16 @@ public class Gestor_Producao implements Runnable {
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                            
+                            System.out.println("------------------------ESTATISTICAS-----------------------------------------");
+                            System.out.println("-----------------------------------------------------------------------------");
+                            System.out.println("Total pecas descarregadas Pusher 1: " +atualiza_total_pecas_descarga(1));
+                            for(int y=0; y<8; y++)
+                            {
+                                System.out.println("Total pecas Pusher 1: P"+(y+1)+" - "+ Pusher_1[y]);
+                            }
+                            System.out.println("-----------------------------------------------------------------------------");
+                            System.out.println("-----------------------------------------------------------------------------");
                         }
                         
                         else if (tipo_ordem.equals("U2"))
@@ -509,18 +716,18 @@ public class Gestor_Producao implements Runnable {
                         
                             // tenho de saber a que pusher tenho de ler, se não vou estar a ler dos dois desnecessáriamente
                             
-                            sensorPM2 = ModBus.readPLC(11, 0);                // readPLC(numRegisto,0)
+                            //sensorPM2 = ModBus.readPLC(11, 0);                // readPLC(numRegisto,0)
                             num_serie_PM2 = ModBus.readPLC(16, 0);            // readPLC(numRegisto,0) 
                         
-                            while (sensorPM2 != 1 || num_serie_PM2 != num_serie)
+                            while (/*sensorPM2 != 1 ||*/ num_serie_PM2 != num_serie)
                             {
                                 //fica aqui à espera e vai atualizando as variaveis
                                 System.out.flush();                            
-                                sensorPM2 = ModBus.readPLC(11, 0);           // readPLC(numRegisto,0)
+                                //sensorPM2 = ModBus.readPLC(11, 0);           // readPLC(numRegisto,0)
                                 num_serie_PM2 = ModBus.readPLC(16, 0);       // readPLC(numRegisto,0)
                             }
                        
-                            System.out.println("sensor_lido: " + sensorAT2);
+                            //System.out.println("sensor_lido: " + sensorAT2);
                             System.out.println("num_serie_lido: "+num_serie_AT2);
                        
                             // vai atulizar hora de fim
@@ -537,6 +744,16 @@ public class Gestor_Producao implements Runnable {
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                            
+                            System.out.println("------------------------ESTATISTICAS-----------------------------------------");
+                            System.out.println("-----------------------------------------------------------------------------");
+                            System.out.println("Total pecas descarregadas Pusher 2: " +atualiza_total_pecas_descarga(2));
+                            for(int y=0; y<8; y++)
+                            {
+                                System.out.println("Total pecas Pusher 1: P"+(y+1)+" - "+ Pusher_2[y]);
+                            }
+                            System.out.println("-----------------------------------------------------------------------------");
+                            System.out.println("-----------------------------------------------------------------------------");
                         }
                         
 
@@ -587,6 +804,67 @@ public class Gestor_Producao implements Runnable {
                 }.start();
     }
     
+    public int get_n_execucao(String n_ordem)
+    {
+        // tenho de ir ver em que posicao está o n_ordem no vetor de pedidos pendentes
+        // pois está associada ao numero de pecas em execucao
+        
+        int pos = -1;
+        int n_exec = 0;
+        
+        for(int i=0; vetor_pedidos_pendentes[i] != null; i++)
+        {
+            String num_ordem  =this.vetor_pedidos_pendentes[i].substring(1, 4);
+            
+            if(num_ordem.equals(n_ordem))
+            {
+                pos=i;
+                break;
+            }
+        }
+        
+        if(pos < 0)
+        {
+            return 0;
+        }
+        else
+        {
+            n_exec = vetor_pedidos_execucao[pos];
+            return n_exec;
+        }
+            
+    }
+    
+    
+    public String get__quantidadade_original(String n_ordem)
+    {
+        int pos = -1;
+        String quantidade = "0";
+        
+        for(int i=0; i<todos_pedidos.size() ; i++)
+        {
+            String pedido = todos_pedidos.get(i);
+            String num_ordem  =pedido.substring(1, 4);
+            
+            if(num_ordem.equals(n_ordem))
+            {
+                pos=i;
+                break;
+            }
+        }
+        
+        if(pos < 0)
+        {
+            return quantidade;
+        }
+        else
+        {
+            
+            quantidade = todos_pedidos.get(pos);
+            return quantidade;
+        }
+    }
+    
     @Override
     public void run()                                                           // função que vai andar sempre a percorrer o vetor de pedidos pendentes e a mandar executar
     {
@@ -596,6 +874,17 @@ public class Gestor_Producao implements Runnable {
         String quantidade;
         int quant;
         
+        //colocar todos os contadores dos Pusher a zero
+        for(int p=0; p<8; p++)
+        {
+            Pusher_1[p] =0;
+            Pusher_2[p] =0;
+        }
+        
+        for(int p=0; p<15; p++)
+        {
+            vetor_pedidos_execucao[p] = 0;
+        }
 
         while(true)
         {
@@ -682,6 +971,9 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
+                                                    insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
+                                                    
+                                                    System.out.println("ordem: "+n_ordem+ " - EM EXECUÇÃO: "+get_n_execucao(n_ordem));
                                                     
                                                     escreve_PLC(peca_orig, peca_final, quant);
                                                     //ModBus.writePLC(1, 0);      // para garantir que só tira uma peça
@@ -713,6 +1005,9 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
+                                                    insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
+                                                    
+                                                    System.out.println("ordem: "+n_ordem+ " - EM EXECUÇÃO: "+get_n_execucao(n_ordem));
                                                     
                                                     escreve_PLC(peca_orig, peca_final, quant);
                                                     //ModBus.writePLC(1, 0); 
@@ -801,7 +1096,8 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                   
+                                                    insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
+                                                    
                                                     //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     int peca_original = 0;
                                                     peca_trans_1 = 14;
@@ -878,7 +1174,8 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                   
+                                                    insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
+                                                    
                                                     //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     int peca_original = 0;
                                                     peca_trans_1 = 14;
@@ -941,7 +1238,6 @@ public class Gestor_Producao implements Runnable {
                             //--------------------------------------------------------DESCARGA----------------------------------------------------------------------------------------------
                             //------------------------------------------------------------------------------------------------------------------------------------------------------
                             case "U":                                                           // se for uma descarga
-                
                                         n_ordem  = vetor_pedidos_pendentes[i].substring(1, 4);
                                         peca_1 = vetor_pedidos_pendentes[i].substring(4, 5);
                                         peca_2 = vetor_pedidos_pendentes[i].substring(5, 6);
@@ -975,7 +1271,6 @@ public class Gestor_Producao implements Runnable {
                                             {
                                                 aux = 1;
                                                 
-                                                
                                                 if (numero_ordem.indexOf(n_ordem) == -1)                                               // o pedido é a primeira vez que vai ser executado logo actualizamos o vetor de horas iniciais
                                                 {
                                                     numero_ordem.add(n_ordem);                                                          // adiciona o numero de ordem a ser executado
@@ -1008,7 +1303,8 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                   
+                                                    insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
+                                                    
                                                     //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     int peca_original = 0;
                                                     peca_trans_1 = 0;
@@ -1029,6 +1325,7 @@ public class Gestor_Producao implements Runnable {
                                                     escreve_PLC_montagem_descarga(peca_descarga);         //manda a peça de baixo
                                                     ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
                                                    
+                                                    adiciona_peca_descarga(peca_descarga, local_descarga);  // aumenta no vetor do pusher correspondente, o tipo de peca que descarregou
                                                     
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
@@ -1066,7 +1363,8 @@ public class Gestor_Producao implements Runnable {
 
                                                     System.out.println("atualizacao do vetor de pedidos pendentes: " + this.vetor_pedidos_pendentes[i]);
 
-                                                   
+                                                    insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
+                                                    
                                                     //-------------------------- PARTE FEITA NO ESCOLHA CAMINHO ---------------------------------------------
                                                     int peca_original = 0;
                                                     peca_trans_1 = 0;
@@ -1087,7 +1385,8 @@ public class Gestor_Producao implements Runnable {
                                                     escreve_PLC_montagem_descarga(peca_descarga);         //manda a peça de baixo
                                                     ModBus.writePLC(1, 0);              //mete a zero a variavel tirar peça porque se nao no PLC não funciona, devido à forma como a Maq.Est. está feita
                                                    
-                                                   
+                                                    adiciona_peca_descarga(peca_descarga, local_descarga);  // aumenta no vetor do pusher correspondente, o tipo de peca que descarregou
+                                                    
                                                     if( quant == 0)             //quer dizer que é a ultima peca (nao esquecer que em cima já foi retirado 1 à quantidade)
                                                     {
                                                         if(local_descarga == 1)
