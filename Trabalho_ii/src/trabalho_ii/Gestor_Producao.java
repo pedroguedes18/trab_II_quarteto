@@ -15,15 +15,16 @@ public class Gestor_Producao implements Runnable {
     
     private final String [] vetor_pedidos_pendentes = new String [15];          // cria um vetor de pedidos pendentes
     private final int [] vetor_aux_ped_pendentes = new int [15];                // vetor auxiliar de pedidos pendes que indicam se o processo já entrou em execução alguma vez
-    private final int [] vetor_pedidos_execucao = new int [15];           // cria um vetor de pedidos execucao. É uma replica dos pedidos em execução na medida em que diz quantas pecas estao no sistema a ser processadas
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     
     private final ArrayList<String> todos_pedidos = new ArrayList<> ();
-    private final ArrayList<String> numero_ordem = new ArrayList<> ();
-    private final ArrayList<String> numero_ordem_pendentes = new ArrayList<> ();
+    private final ArrayList<String> numero_ordem = new ArrayList<> ();                          // numero de ordem em execução
+    private final ArrayList<String> numero_ordem_pendentes = new ArrayList<> ();                // todos os numeros de ordem
     private final ArrayList<String> horaData_init_pedidos_pendentes = new ArrayList<> ();       // assumi que tem ligacao directa ao vetor_pedidos_execucao
     private final ArrayList<String> horaData_final_pedidos_pendentes = new ArrayList<>();       // " " " "
     private final ArrayList<String> horaData_entrada_pedidos_pendentes = new ArrayList<>();     // hora de entrada dos pedidos pendentes
+    private final ArrayList<Integer> pecas_pendentes = new ArrayList<>();                      // indica as pecas produzidas em cada ordem
+    private final ArrayList<Integer> pecas_execucao = new ArrayList<>();           // cria um vetor de pedidos execucao. É uma replica dos pedidos na medida em que diz quantas pecas estao no sistema a ser processadas
     
     private int celula;
     private int peca_trans_1, peca_trans_2, peca_trans_3, peca_trans_4, peca_trans_5;
@@ -157,6 +158,8 @@ public class Gestor_Producao implements Runnable {
             // vou associar uma hora de entrada do pedido no sistema, ou seja, ao numero de ordem
             
             String n_ord  =this.vetor_pedidos_pendentes[pos].substring(1, 4);
+            String quantidade = this.vetor_pedidos_pendentes[pos].substring(6, 8);
+            int quant = Integer.parseInt(quantidade);
                                 
             Date data_inicio = new Date();
         
@@ -164,6 +167,10 @@ public class Gestor_Producao implements Runnable {
             
             numero_ordem_pendentes.add(n_ord);                                  //fica guardado o numero de ordem de um pedido; associado a ele estão as respectivas datas
                                                                                 // deste modo quando o é removido do vetor de pedidos pendentes, tenho sempre acesso ao número de ordem
+            
+            pecas_pendentes.add(quant);                                         // insere quantas pecas foram pedidas associadas sempre ao numero_ordem_pendentes
+            pecas_execucao.add(0);
+            
             int n_ord_int = numero_ordem_pendentes.indexOf(n_ord);
             
             horaData_entrada_pedidos_pendentes.add(n_ord_int,hourDate_inicio);  // na posição igual ao seu numero de ordem associa-lhe a data do vetor de pedidos pendentes                            
@@ -180,8 +187,14 @@ public class Gestor_Producao implements Runnable {
     
     public void insere_vetor_pedidos_execucao(int pos, int celula)
     {
+            String n_ordem  =this.vetor_pedidos_pendentes[pos].substring(1, 4);
+            
+            int posicao = numero_ordem_pendentes.indexOf(n_ordem);
         
-            this.vetor_pedidos_execucao[pos]++;
+            int quant = pecas_execucao.get(posicao);
+            quant++;
+            
+            pecas_execucao.set(posicao, quant);
             
             new Thread()
                 {
@@ -189,6 +202,8 @@ public class Gestor_Producao implements Runnable {
                     public void run()
                     {
                         Escolha_Caminho EC = Escolha_Caminho.getInstance();
+                        int quant;
+                        int posicao = numero_ordem_pendentes.indexOf(n_ordem);
                         
                         switch (celula)
                         {
@@ -198,8 +213,11 @@ public class Gestor_Producao implements Runnable {
                                         System.out.flush();
                                     }
                         
-                                    vetor_pedidos_execucao[pos]--;
-                                    
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
+
                                     break;
                                     
                             case 2:
@@ -208,7 +226,10 @@ public class Gestor_Producao implements Runnable {
                                         System.out.flush();
                                     }
                         
-                                    vetor_pedidos_execucao[pos]--;
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
                                     
                                     break;
                             
@@ -218,8 +239,11 @@ public class Gestor_Producao implements Runnable {
                                         System.out.flush();
                                     }
                         
-                                    vetor_pedidos_execucao[pos]--;
-                                    
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
+                                          
                                     break;
                             case 4:
                                     while(EC.celula_4.DisponibilidadeCelula() == 0)
@@ -227,8 +251,53 @@ public class Gestor_Producao implements Runnable {
                                         System.out.flush();
                                     }
                         
-                                    vetor_pedidos_execucao[pos]--;
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
+
+                                    break;
                                     
+                            case 5:
+                                    while(EC.celula_5.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                        
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
+
+                                    break;
+                                    
+                            case 6:
+                                    while(EC.celula_6.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                                    System.out.println("devia retirar agora");
+                        
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
+
+                                    break;
+                                    
+                            case 7:
+                                    while(EC.celula_7.DisponibilidadeCelula() == 0)
+                                    {
+                                        System.out.flush();
+                                    }
+                                    
+                                    System.out.println("");
+                        
+                                    quant = pecas_execucao.get(posicao);
+                                    quant--;
+
+                                    pecas_execucao.set(posicao, quant);
+
                                     break;
                         }
                         
@@ -448,18 +517,18 @@ public class Gestor_Producao implements Runnable {
         int tamanho = this.vetor_pedidos_pendentes.length -1;
         
         this.vetor_pedidos_pendentes[pos] = null;
-        this.vetor_pedidos_execucao[pos] = 0;
         
         for(int i=pos; i < tamanho; i++)
         {
             this.vetor_pedidos_pendentes[i] = this.vetor_pedidos_pendentes[i+1];
-            this.vetor_pedidos_execucao[i] = this.vetor_pedidos_execucao[i+1];
         }
         
         this.vetor_pedidos_pendentes[tamanho] = null;                           // asseguro que a ultima posicao fica com valor nulo
-        this.vetor_pedidos_execucao[tamanho] = 0;
         
     }
+    
+    //------------------------------------------- FUNÇÕES PARA AS ESTATISTICAS--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     
     public int atualiza_total_pecas_descarga(int Pusher)
     {
@@ -551,7 +620,170 @@ public class Gestor_Producao implements Runnable {
            tempo_maq_c4_b =(25*maquina_c4_b[0] + 25*maquina_c4_b[1]+20*maquina_c4_b[2]);
     }
     
+    public int procura_vetor(String n_ordem)
+    {
+        //retorna a posição do vetor onde está o numero de ordem
+        
+        int pos=-1;
+        
+        for (int i=0; vetor_pedidos_pendentes != null ; i++)                    // percorre o vetor até encontrar uma posição que tenha o numero de serie
+        {
+
+            String numero_ordem = this.vetor_pedidos_pendentes[i].substring(1, 4);
+
+            if(numero_ordem.equals(n_ordem))
+            {
+                pos = i;
+                break;
+            }
+            
+        }
+        
+        return pos;
+    }
     
+    public int get_pecas_execucao(String n_ordem)
+    {
+        // tenho de ir ver em que posicao está o n_ordem no vetor de pedidos pendentes
+        // pois está associada ao numero de pecas em execucao
+        int quantidade = 0;
+
+        int pos = numero_ordem_pendentes.indexOf(n_ordem);
+        
+        quantidade = pecas_execucao.get(pos);
+        
+        return quantidade;
+            
+    }
+    
+    public int get_pecas_pendentes(String n_ordem)
+    {
+        int quantidade = 0;
+
+        int pos = numero_ordem_pendentes.indexOf(n_ordem);
+        
+        quantidade = pecas_pendentes.get(pos);
+        
+        return quantidade;
+        
+    }
+    
+    
+        public int get_quantidade_original(int pos)
+    {
+        //devolve a quantide que inicialmente tinha uma ordem
+        
+        int quantidade = 0;
+
+        quantidade = Integer.parseInt(todos_pedidos.get(pos).substring(6, 8));
+        
+        return quantidade;
+        
+    }    
+        
+    
+    public String ver_estado(int pos)                                           // recebo a posicao do que estou a anaalisar no numero_ordem_pendentes
+    {
+        // devolve o estado a ordem em questão
+        
+        String estado;
+        
+        if(!(horaData_final_pedidos_pendentes.get(pos).equals("0")))
+        {
+            estado = "Executado";
+        }
+        else if(!(horaData_init_pedidos_pendentes.get(pos).equals("0")))
+        {
+            estado = "Em execução";
+        }
+        else
+            estado = "Pendente";
+        
+        return estado;
+    }
+    
+    public int pecas_pendentes(int pos)                                     // recebo a posicao do que estou a anaalisar no numero_ordem_pendentes
+    {
+        // devolve o numero de pecas pendentes de uma ordem de execução
+        
+        int pecas_pendentes = 0;
+        
+        String estado = ver_estado(pos);
+        
+        if(estado.equals("Executado"))
+        {
+            pecas_pendentes = 0;
+        }
+        
+        else if(estado.equals("Em execução"))
+        {
+            String n_ordem = numero_ordem_pendentes.get(pos);
+            
+            pecas_pendentes = get_pecas_pendentes(n_ordem);
+        }
+        
+        else if(estado.equals("Pendente"))
+        {
+            pecas_pendentes = get_quantidade_original(pos);
+        }
+        
+        return pecas_pendentes;
+    }
+    
+    public int pecas_produzidas(int pos)                                        // recebo a posicao do que estou a anaalisar no numero_ordem_pendentes
+    {
+        int pecas_produzidas = 0;
+        int pecas_pendentes = 0;
+        int pecas_totais = 0;
+        int pecas_execucao = 0;
+        String estado = ver_estado(pos);
+        
+        if(estado.equals("Executado"))
+        {
+            pecas_produzidas = get_quantidade_original(pos);
+        }
+        
+        else if(estado.equals("Em execução"))
+        {
+            String n_ordem = numero_ordem_pendentes.get(pos);
+            
+            pecas_totais = get_quantidade_original(pos);
+            pecas_pendentes = get_pecas_pendentes(n_ordem);
+            pecas_execucao = get_pecas_execucao(n_ordem);
+            
+            pecas_produzidas = pecas_totais - pecas_pendentes - pecas_execucao;
+        }
+        
+        else if(estado.equals("Pendente"))
+        {
+            pecas_produzidas = 0;
+        }
+        
+        return pecas_produzidas;
+    }
+    
+        
+    public void teste_de_estatisticas()
+    {
+        // imprime todas as ordens que já foram executadas
+        
+        System.out.println("\n");
+        System.out.println("numero ordem   |   tipo de ordem   | estado  | pecas_produzidas  |  Pecas em producao  |  Pecas pendentes | hora de entrada | hora de inicio execucao | hora de fim");
+        
+        for(int i=0; i<numero_ordem_pendentes.size(); i++)
+        {
+            String n_ordem = numero_ordem_pendentes.get(i);
+            
+            System.out.println(numero_ordem_pendentes.get(i) +"  |  "+ todos_pedidos.get(i)+"  |  "+ ver_estado(i) + "  |  "+ pecas_produzidas(i) + "  |  "+ get_pecas_execucao(n_ordem) + "  |  "+ pecas_pendentes(i)
+                    + "  |  "+ horaData_entrada_pedidos_pendentes.get(i) + "  |  "+ horaData_init_pedidos_pendentes.get(i) + "  |  "+ horaData_final_pedidos_pendentes.get(i) );
+        }
+        
+        System.out.println("\n");
+    }
+    
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
     public void thread_espera_peca(String tipo_ordem,String ordem_numero, int num_serie)                                             //para testar se funciona deste modo
     {
         new Thread()
@@ -590,9 +822,9 @@ public class Gestor_Producao implements Runnable {
         
                             String hourDate_fim = dateFormat.format(date_fim);                                  // devolve a hora e a data que o pedido finalizou a sua execucao
                         
-                            int posicao =numero_ordem_pendentes.indexOf(ordem_numero);                                   //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
+                            int posicao =numero_ordem_pendentes.indexOf(ordem_numero);                          //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
         
-                            horaData_final_pedidos_pendentes.add(posicao, hourDate_fim);
+                            horaData_final_pedidos_pendentes.set(posicao, hourDate_fim);
                             
                             System.out.println("NUMERO DE ORDEM           : " + ordem_numero);
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
@@ -601,6 +833,8 @@ public class Gestor_Producao implements Runnable {
                             
                             atualiza_pecas_maquina();
                             atualiza_tempo_operacao_maquina();
+                            teste_de_estatisticas();
+                            
                             
                             System.out.println("------------------------ESTATISTICAS-----------------------------------------");
                             System.out.println("--------------------------MAQUINAS-------------------------------------------");
@@ -628,6 +862,7 @@ public class Gestor_Producao implements Runnable {
                             System.out.println("-----------------------------------------------------------------------------");
                             System.out.println("-----------------------------------------------------------------------------");
                             
+    
                         }
                         
                         else if (tipo_ordem.equals("M"))
@@ -656,12 +891,14 @@ public class Gestor_Producao implements Runnable {
                         
                             int posicao =numero_ordem_pendentes.indexOf(ordem_numero);                                  //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
         
-                            horaData_final_pedidos_pendentes.add(posicao, hourDate_fim);
+                            horaData_final_pedidos_pendentes.set(posicao, hourDate_fim);
                             
                             System.out.println("NUMERO DE ORDEM           : " + ordem_numero);
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                            
+                            teste_de_estatisticas();
                         }
                         
                         else if (tipo_ordem.equals("U1"))
@@ -692,12 +929,14 @@ public class Gestor_Producao implements Runnable {
                         
                             int posicao =numero_ordem_pendentes.indexOf(ordem_numero);                                  //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
         
-                            horaData_final_pedidos_pendentes.add(posicao, hourDate_fim);
+                            horaData_final_pedidos_pendentes.set(posicao, hourDate_fim);
                             
                             System.out.println("NUMERO DE ORDEM           : " + ordem_numero);
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                            
+                            teste_de_estatisticas();
                             
                             System.out.println("------------------------ESTATISTICAS-----------------------------------------");
                             System.out.println("-----------------------------------------------------------------------------");
@@ -738,12 +977,14 @@ public class Gestor_Producao implements Runnable {
                         
                             int posicao =numero_ordem_pendentes.indexOf(ordem_numero);                                   //vai ver em que posicao está o numero de ordem para lhe associar a sua hora de fim
         
-                            horaData_final_pedidos_pendentes.add(posicao, hourDate_fim);
+                            horaData_final_pedidos_pendentes.set(posicao, hourDate_fim);
                             
                             System.out.println("NUMERO DE ORDEM           : " + ordem_numero);
                             System.out.println("DATA DE ENTRADA DO PEDIDO : " + horaData_entrada_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE INICIO DE EXECUÇÃO: " +  horaData_init_pedidos_pendentes.get(posicao));
                             System.out.println("DATA DE FIM DE EXECUÇÃO   : " + horaData_final_pedidos_pendentes.get(posicao));        // só para ver se funciona a data
+                            
+                            teste_de_estatisticas();
                             
                             System.out.println("------------------------ESTATISTICAS-----------------------------------------");
                             System.out.println("-----------------------------------------------------------------------------");
@@ -804,67 +1045,7 @@ public class Gestor_Producao implements Runnable {
                 }.start();
     }
     
-    public int get_n_execucao(String n_ordem)
-    {
-        // tenho de ir ver em que posicao está o n_ordem no vetor de pedidos pendentes
-        // pois está associada ao numero de pecas em execucao
-        
-        int pos = -1;
-        int n_exec = 0;
-        
-        for(int i=0; vetor_pedidos_pendentes[i] != null; i++)
-        {
-            String num_ordem  =this.vetor_pedidos_pendentes[i].substring(1, 4);
-            
-            if(num_ordem.equals(n_ordem))
-            {
-                pos=i;
-                break;
-            }
-        }
-        
-        if(pos < 0)
-        {
-            return 0;
-        }
-        else
-        {
-            n_exec = vetor_pedidos_execucao[pos];
-            return n_exec;
-        }
-            
-    }
-    
-    
-    public String get__quantidadade_original(String n_ordem)
-    {
-        int pos = -1;
-        String quantidade = "0";
-        
-        for(int i=0; i<todos_pedidos.size() ; i++)
-        {
-            String pedido = todos_pedidos.get(i);
-            String num_ordem  =pedido.substring(1, 4);
-            
-            if(num_ordem.equals(n_ordem))
-            {
-                pos=i;
-                break;
-            }
-        }
-        
-        if(pos < 0)
-        {
-            return quantidade;
-        }
-        else
-        {
-            
-            quantidade = todos_pedidos.get(pos);
-            return quantidade;
-        }
-    }
-    
+
     @Override
     public void run()                                                           // função que vai andar sempre a percorrer o vetor de pedidos pendentes e a mandar executar
     {
@@ -873,6 +1054,7 @@ public class Gestor_Producao implements Runnable {
         String peca_2;
         String quantidade;
         int quant;
+        int pos_num_ordem;
         
         //colocar todos os contadores dos Pusher a zero
         for(int p=0; p<8; p++)
@@ -881,20 +1063,18 @@ public class Gestor_Producao implements Runnable {
             Pusher_2[p] =0;
         }
         
-        for(int p=0; p<15; p++)
-        {
-            vetor_pedidos_execucao[p] = 0;
-        }
 
         while(true)
         {
             System.out.flush();
             
-            if(this.vetor_pedidos_pendentes[0] != null)                         // quer dizer que já tem pelo menos um pedido pendente; o vetor está não esta vazio logo precisa de executar
-            {
+            //if(this.vetor_pedidos_pendentes[0] != null)                         // quer dizer que já tem pelo menos um pedido pendente; o vetor está não esta vazio logo precisa de executar
+            //{
                 
-                for(int i=0; this.vetor_pedidos_pendentes[i] != null ; i++)     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
+                for(int i=0; i < 15; i++)     // percorre o vetor de pedidos pendentes do inicio até à ultima posicao ocupada
                 {
+                    if(vetor_pedidos_pendentes[i] != null)
+                    {
                     aux = 0;     
                     Escolha_Caminho escolha_caminho = Escolha_Caminho.getInstance();        // vai buscar a instancia da Classe Escolha_caminho      
                     
@@ -955,6 +1135,9 @@ public class Gestor_Producao implements Runnable {
                                                 
                                                     
                                                     quant = quant - 1;
+                                                    
+                                                    pos_num_ordem = numero_ordem_pendentes.indexOf(n_ordem);    //vai buscar a posicao onde esta o numero de ordem
+                                                    pecas_pendentes.add(pos_num_ordem, quant);
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
@@ -973,7 +1156,7 @@ public class Gestor_Producao implements Runnable {
 
                                                     insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
                                                     
-                                                    System.out.println("ordem: "+n_ordem+ " - EM EXECUÇÃO: "+get_n_execucao(n_ordem));
+                                                    System.out.println("ordem: "+n_ordem+ " - EM EXECUÇÃO: "+get_pecas_execucao(n_ordem));
                                                     
                                                     escreve_PLC(peca_orig, peca_final, quant);
                                                     //ModBus.writePLC(1, 0);      // para garantir que só tira uma peça
@@ -989,6 +1172,9 @@ public class Gestor_Producao implements Runnable {
                                                 {
                                                     
                                                     quant = quant - 1;
+                                                    
+                                                    pos_num_ordem = numero_ordem_pendentes.indexOf(n_ordem);    //vai buscar a posicao onde esta o numero de ordem
+                                                    pecas_pendentes.add(pos_num_ordem, quant);
 
                                                     quantidade = Integer.toString(quant);                                       // converte para string a quantidade desejada
 
@@ -1007,7 +1193,7 @@ public class Gestor_Producao implements Runnable {
 
                                                     insere_vetor_pedidos_execucao(i, celula);   //adiciona que uma peca está a ser executada
                                                     
-                                                    System.out.println("ordem: "+n_ordem+ " - EM EXECUÇÃO: "+get_n_execucao(n_ordem));
+                                                    System.out.println("ordem: "+n_ordem+ " - EM EXECUÇÃO: "+get_pecas_execucao(n_ordem));
                                                     
                                                     escreve_PLC(peca_orig, peca_final, quant);
                                                     //ModBus.writePLC(1, 0); 
@@ -1080,6 +1266,9 @@ public class Gestor_Producao implements Runnable {
                                                 
                                                     
                                                     quant = quant - 1;
+                                                    
+                                                    pos_num_ordem = numero_ordem_pendentes.indexOf(n_ordem);    //vai buscar a posicao onde esta o numero de ordem
+                                                    pecas_pendentes.add(pos_num_ordem, quant);
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
@@ -1158,6 +1347,9 @@ public class Gestor_Producao implements Runnable {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                     System.out.println("Montagem: numero de ordem já se encontra a ser executado.");
                                                     quant = quant - 1;
+                                                    
+                                                    pos_num_ordem = numero_ordem_pendentes.indexOf(n_ordem);    //vai buscar a posicao onde esta o numero de ordem
+                                                    pecas_pendentes.add(pos_num_ordem, quant);
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
@@ -1287,6 +1479,9 @@ public class Gestor_Producao implements Runnable {
                                                 
                                                     
                                                     quant = quant - 1;
+                                                    
+                                                    pos_num_ordem = numero_ordem_pendentes.indexOf(n_ordem);    //vai buscar a posicao onde esta o numero de ordem
+                                                    pecas_pendentes.add(pos_num_ordem, quant);
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
@@ -1346,7 +1541,10 @@ public class Gestor_Producao implements Runnable {
                                                 {
                                                     // tenho de retirar 1 à quantidade -----------------------------------------------------------------------------------
                                                 
-                                                   quant = quant - 1;
+                                                    quant = quant - 1;
+                                                   
+                                                    pos_num_ordem = numero_ordem_pendentes.indexOf(n_ordem);    //vai buscar a posicao onde esta o numero de ordem
+                                                    pecas_pendentes.add(pos_num_ordem, quant);
 
                                                     quantidade = Integer.toString(quant);     // converte para string a quantidade desejada
 
